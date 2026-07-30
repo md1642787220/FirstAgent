@@ -5,6 +5,7 @@
 """
 import time
 import re
+import json
 from typing import Optional
 from enum import Enum
 
@@ -162,29 +163,75 @@ def run_inventory_agent(query: str, trace: TraceLogger) -> dict:
 
 
 def run_knowledge_agent(query: str, trace: TraceLogger) -> dict:
-    """工艺知识Agent（RAG）"""
+    """工艺知识Agent（RAG增强版）
+
+    执行策略：
+    1. 先进行通用RAG检索获取背景知识
+    2. 根据查询特征调用专用工具（参数推荐/缺陷诊断/标准搜索）
+    3. 聚合所有结果返回给主控Agent生成最终回答
+    """
     start = time.time()
     trace.add_step(agent="工艺知识Agent", phase=TracePhase.ACTION,
-                   thought="RAG检索焊接知识库", action="rag_retrieval")
-    context = retrieve_knowledge(query, k=3)
-    result = {"rag_context": context}
+                   thought="RAG混合检索焊接知识库（向量+BM25+RRF融合）", action="rag_hybrid_search")
 
+    # 步骤1：通用RAG检索（作为背景上下文）
+    context = retrieve_knowledge(query, k=3)
+    result = {
+        "rag_context": context,
+        "retrieval_source": "hybrid_search(vector+bm25+rrf)",
+    }
+
+    # 步骤2：根据查询特征调用专用工具（这些工具内部也会尝试RAG）
     # 参数推荐
-    mat_match = re.search(r'Q235|Q345|SUS304|304', query, re.IGNORECASE)
+    mat_match = re.search(r'Q235|Q345|SUS304|304|不锈钢|碳钢', query, re.IGNORECASE)
     thick_match = re.search(r'(\d+)mm', query)
-    if mat_match and thick_match and ("怎么焊" in query or "参数" in query or "推荐" in query):
+    if mat_match and thick_match and ("怎么焊" in query or "参数" in query or "推荐" in query or "工艺" in query):
         from src.agents.tools.knowledge_tools import recommend_welding_parameters
-        result["recommendation"] = recommend_welding_parameters.invoke({"material": mat_match.group().upper(), "thickness": thick_match.group()})
+        tool_result = recommend_welding_parameters.invoke({
+            "material": mat_match.group().upper(),
+            "thickness": thick_match.group()
+        })
+        result["recommendation"] = tool_result
+        trace.add_step(agent="工艺知识Agent", phase=TracePhase.ACTION,
+                       thought=f"调用参数推荐工具: {mat_match.group()} {thick_match.group()}",
+                       action="tool_recommend_parameters")
 
     # 缺陷诊断
-    for defect in ["气孔", "夹渣", "未焊透", "裂纹", "咬边"]:
+    for defect in ["气孔", "夹渣", "未焊透", "裂纹", "咬边", "烧穿", "变形", "未熔合"]:
         if defect in query:
             from src.agents.tools.knowledge_tools import diagnose_welding_defect
-            result["diagnosis"] = diagnose_welding_defect.invoke({"defect_type": defect})
+            tool_result = diagnose_welding_defect.invoke({"defect_type": defect})
+            result["diagnosis"] = tool_result
+            trace.add_step(agent="工艺知识Agent", phase=TracePhase.ACTION,
+                           thought=f"调用缺陷诊断工具: {defect}",
+                           action="tool_diagnose_defect")
             break
 
+    # 标准搜索
+    if any(kw in query for kw in ["标准", "GB/T", "ISO", "ASME", "规范", "JB"]):
+        from src.agents.tools.knowledge_tools import search_welding_standards
+        # 提取关键词
+        std_keyword = re.search(r'(GB/T|ISO|ASME|JB/\d+|\w+-\d+)', query, re.IGNORECASE)
+        keyword = std_keyword.group() if std_keyword else query[:20]
+        tool_result = search_welding_standards.invoke({"keyword": keyword})
+        result["standards"] = tool_result
+        trace.add_step(agent="工艺知识Agent", phase=TracePhase.ACTION,
+                       thought=f"调用标准搜索工具: {keyword}",
+                       action="tool_search_standards")
+
+    # 开放式问题：使用通用RAG检索工具补充
+    if not ("参数" in query or "推荐" in query or any(d in query for d in ["气孔", "夹渣", "裂纹", "咬边"]) or "标准" in query):
+        from src.agents.tools.knowledge_tools import rag_search
+        open_result = rag_search.invoke({"query": query, "top_k": 3})
+        result["open_search"] = open_result
+        trace.add_step(agent="工艺知识Agent", phase=TracePhase.ACTION,
+                       thought="使用通用RAG检索工具进行开放式搜索",
+                       action="tool_rag_search")
+
+    latency_ms = int((time.time() - start) * 1000)
     trace.add_step(agent="工艺知识Agent", phase=TracePhase.OBSERVATION,
-                   observation=context[:200], duration_ms=int((time.time() - start) * 1000))
+                   observation=f"RAG检索完成，上下文长度: {len(context)}字符",
+                   duration_ms=latency_ms)
     return {"agent": "工艺知识Agent", "data": result}
 
 
@@ -242,21 +289,74 @@ def supervisor_chat(user_input: str, session_id: Optional[str] = None) -> dict:
 
 
 def format_answer(user_input: str, intent: IntentType, results: list) -> str:
-    """格式化最终回答"""
+    """使用LLM生成自然语言回答（降级兼容模板回复）"""
     if not results:
         return "抱歉，未能处理您的请求。"
-    parts = []
+
+    # 构建Agent结果摘要
+    results_summary = []
     for r in results:
         agent = r.get("agent", "")
         data = r.get("data", {})
         if "error" in r:
-            parts.append(f"[{agent}] 执行出错: {r['error']}")
+            results_summary.append(f"[{agent}] 执行出错: {r['error']}")
         else:
-            parts.append(f"[{agent}] 查询结果:\n{format_data(data)}")
-    answer = "\n\n".join(parts)
-    if len(results) > 1:
-        answer = f"您的问题涉及多个领域，已分别调用相关Agent处理：\n\n{answer}"
-    return answer
+            results_summary.append(f"[{agent}]:\n{format_data(data)}")
+
+    raw_text = "\n\n".join(results_summary)
+
+    # 尝试调用LLM生成自然语言回答
+    try:
+        from langchain_openai import ChatOpenAI
+        from src.config import settings
+
+        llm = ChatOpenAI(**settings.llm_kwargs)
+
+        system_prompt = """你是焊接AI助手，负责将各专业Agent的查询结果转化为专业、简洁、友好的中文回答。
+
+规则：
+1. 用自然语言总结数据，不要直接输出原始JSON
+2. 突出关键数值和结论
+3. 如果有异常/告警信息，优先提醒
+4. 回答要简洁，控制在200字以内
+5. 使用专业的焊接术语"""
+
+        user_prompt = f"""用户问题: {user_input}
+识别意图: {intent.value}
+
+各Agent查询结果:
+{raw_text}
+
+请根据以上查询结果，用中文回答用户问题："""
+
+        response = llm.invoke([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ])
+
+        answer = response.content.strip()
+
+        # 多Agent时添加前缀说明
+        if len(results) > 1:
+            answer = f"您的问题涉及多个领域，已分别调用相关Agent处理：\n\n{answer}"
+
+        return answer
+
+    except Exception as e:
+        # LLM调用失败时降级到模板回复
+        print(f"[Supervisor] LLM调用失败，使用模板回复: {e}")
+        parts = []
+        for r in results:
+            agent = r.get("agent", "")
+            data = r.get("data", {})
+            if "error" in r:
+                parts.append(f"[{agent}] 执行出错: {r['error']}")
+            else:
+                parts.append(f"[{agent}] 查询结果:\n{format_data(data)}")
+        fallback_answer = "\n\n".join(parts)
+        if len(results) > 1:
+            fallback_answer = f"您的问题涉及多个领域，已分别调用相关Agent处理：\n\n{fallback_answer}"
+        return fallback_answer
 
 
 def format_data(data: dict, indent: int = 0) -> str:

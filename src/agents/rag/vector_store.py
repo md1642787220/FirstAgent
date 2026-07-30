@@ -10,19 +10,48 @@ from src.config import settings
 
 
 def get_embeddings() -> Embeddings:
-    """获取Embedding模型实例。
-    优先使用公司内网模型，失败则降级使用本地FakeEmbedding。
+    """获取Embedding模型实例（三级降级策略）。
+
+    策略优先级：
+      1. OpenAI API（云端部署，需网络）
+      2. 本地 BGE 中文模型（内网/离线环境，推荐）
+      3. MD5 哈希 Fallback（仅测试用，无语义能力）
+
+    Returns:
+        可用的 Embeddings 实例
     """
+    # ===== Level 1: OpenAI API（云端）=====
     try:
         from langchain_openai import OpenAIEmbeddings
+        print("[RAG] ✅ 使用 OpenAI Embedding（云端）")
         return OpenAIEmbeddings(
             api_key=settings.OPENAI_API_KEY,
             base_url=settings.OPENAI_BASE_URL,
             model=settings.EMBEDDING_MODEL,
         )
     except Exception as e:
-        print(f"[RAG] OpenAI Embedding不可用({e})，使用本地Fallback Embedding")
-        return _FallbackEmbedding()
+        print(f"[RAG] ⚠️ OpenAI Embedding不可用({e})，尝试本地模型...")
+
+    # ===== Level 2: 本地 BGE 中文模型（sentence_transformers）=====
+    try:
+        from langchain_huggingface import HuggingFaceEmbeddings
+
+        # 支持通过环境变量自定义模型（默认使用 BGE-small-zh-v1.5）
+        model_name = getattr(settings, 'LOCAL_EMBEDDING_MODEL', None) or "BAAI/bge-small-zh-v1.5"
+
+        embeddings = HuggingFaceEmbeddings(
+            model_name=model_name,
+            model_kwargs={'device': 'cpu'},  # 可根据硬件改为 'cuda'
+            encode_kwargs={'normalize_embeddings': True},
+        )
+        print(f"[RAG] ✅ 使用本地 Embedding 模型: {model_name}")
+        return embeddings
+    except Exception as e:
+        print(f"[RAG] ⚠️ 本地Embedding模型不可用({e})，降级到Fallback...")
+
+    # ===== Level 3: MD5 哈希 Fallback（仅测试）=====
+    print("[RAG] ❌ 使用 MD5 Fallback Embedding（无语义能力，仅适用于测试！）")
+    return _FallbackEmbedding()
 
 
 class _FallbackEmbedding(Embeddings):
@@ -92,6 +121,57 @@ def build_vector_store(documents: List[Document]) -> bool:
     except Exception as e:
         print(f"[RAG] 向量存储构建失败: {e}")
         return False
+
+
+def get_stats() -> dict:
+    """获取向量存储统计信息（文档数、来源分布等）"""
+    store = get_vector_store()
+    if store is None:
+        return {
+            "total_documents": 0,
+            "total_chunks": 0,
+            "collection_name": settings.COLLECTION_NAME,
+            "persist_dir": str(settings.CHROMA_PERSIST_DIR),
+            "last_updated": None,
+            "embedding_model": settings.EMBEDDING_MODEL,
+            "status": "unavailable",
+        }
+
+    try:
+        # 获取底层Chroma集合
+        collection = store._collection
+        total_chunks = collection.count()
+
+        # 统计来源分布
+        source_dist = {}
+        if total_chunks > 0:
+            # 获取所有文档的metadata中的source字段
+            results = collection.get(include=["metadatas"])
+            if results and results.get("metadatas"):
+                for meta in results["metadatas"]:
+                    source = meta.get("source", "unknown")
+                    source_dist[source] = source_dist.get(source, 0) + 1
+
+        return {
+            "total_documents": len(source_dist),  # 不同source数量作为文档数近似
+            "total_chunks": total_chunks,
+            "collection_name": settings.COLLECTION_NAME,
+            "persist_dir": str(settings.CHROMA_PERSIST_DIR),
+            "last_updated": None,  # ChromaDB不直接提供最后更新时间
+            "embedding_model": settings.EMBEDDING_MODEL,
+            "status": "ready",
+            "source_distribution": source_dist,
+        }
+    except Exception as e:
+        return {
+            "total_documents": 0,
+            "total_chunks": 0,
+            "collection_name": settings.COLLECTION_NAME,
+            "persist_dir": str(settings.CHROMA_PERSIST_DIR),
+            "last_updated": None,
+            "embedding_model": settings.EMBEDDING_MODEL,
+            "status": f"error: {e}",
+        }
 
 
 def init_knowledge_base():

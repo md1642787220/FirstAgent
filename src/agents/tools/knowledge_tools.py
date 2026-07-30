@@ -1,8 +1,11 @@
 """
-工艺知识Agent工具集（RAG）
-基于焊接知识库回答工艺参数推荐、缺陷诊断等问题
+工艺知识Agent工具集（RAG增强版）
+基于焊接知识库回答工艺参数推荐、缺陷诊断等问题。
+优先使用RAG真实检索，失败时回退到内置知识库。
 """
 from langchain_core.tools import tool
+
+from src.agents.rag.retriever import hybrid_search, retrieve_knowledge
 
 
 # 焊接工艺知识库（内置，作为RAG的补充/兜底）
@@ -83,11 +86,31 @@ DEFECT_DIAGNOSIS = {
 @tool
 def recommend_welding_parameters(material: str, thickness: str) -> dict:
     """推荐焊接工艺参数。根据母材材质和板厚推荐焊接方法、电流、电压、焊丝等。
+    优先从RAG知识库检索真实文档，失败时回退到内置知识库。
 
     Args:
         material: 母材材质，例如 Q235、Q345、SUS304
         thickness: 板厚描述，例如 10mm、6mm、3mm
     """
+    # 策略1：优先尝试RAG检索
+    try:
+        query = f"{material} {thickness}板 焊接工艺参数推荐 电流 电压 焊速"
+        rag_docs = hybrid_search(query, top_k=2, use_query_expansion=True)
+        if rag_docs and len(rag_docs) > 0:
+            return {
+                "material": material,
+                "thickness": thickness,
+                "recommendation": {
+                    "process": "基于知识库RAG检索结果",
+                    "rag_context": [doc.page_content for doc in rag_docs],
+                    "sources": [doc.metadata.get("source", "unknown") for doc in rag_docs],
+                },
+                "source": "RAG知识库检索",
+            }
+    except Exception as e:
+        print(f"[KnowledgeTool] RAG检索失败，回退到内置知识库: {e}")
+
+    # 策略2：回退到内置硬编码知识库
     key = f"thickness_{thickness}"
     data = WELDING_KNOWLEDGE.get(material, {}).get(key)
     if data:
@@ -95,7 +118,7 @@ def recommend_welding_parameters(material: str, thickness: str) -> dict:
             "material": material,
             "thickness": thickness,
             "recommendation": data,
-            "source": "焊接工艺知识库",
+            "source": "焊接工艺知识库(内置)",
         }
     # 兜底推荐
     return {
@@ -112,17 +135,34 @@ def recommend_welding_parameters(material: str, thickness: str) -> dict:
 @tool
 def diagnose_welding_defect(defect_type: str) -> dict:
     """诊断焊接缺陷，给出原因分析和解决方案。
+    优先从RAG知识库检索真实案例，失败时回退到内置诊断库。
 
     Args:
         defect_type: 缺陷类型，例如 气孔、夹渣、未焊透、裂纹、咬边
     """
+    # 策略1：优先尝试RAG检索
+    try:
+        query = f"焊接缺陷 {defect_type} 原因分析 解决方案 预防措施"
+        rag_docs = hybrid_search(query, top_k=2, use_query_expansion=True)
+        if rag_docs and len(rag_docs) > 0:
+            return {
+                "defect": defect_type,
+                "causes": [doc.page_content[:200] for doc in rag_docs],  # RAG返回的上下文作为原因参考
+                "solutions": ["请参考上述知识库内容中的解决方案"],
+                "rag_sources": [doc.metadata.get("source", "unknown") for doc in rag_docs],
+                "source": "RAG知识库检索",
+            }
+    except Exception as e:
+        print(f"[KnowledgeTool] RAG检索失败，回退到内置诊断库: {e}")
+
+    # 策略2：回退到内置硬编码诊断库
     data = DEFECT_DIAGNOSIS.get(defect_type)
     if data:
         return {
             "defect": defect_type,
             "causes": data["causes"],
             "solutions": data["solutions"],
-            "source": "焊接缺陷诊断知识库",
+            "source": "焊接缺陷诊断知识库(内置)",
         }
     return {
         "defect": defect_type,
@@ -133,10 +173,29 @@ def diagnose_welding_defect(defect_type: str) -> dict:
 @tool
 def search_welding_standards(keyword: str) -> dict:
     """搜索焊接相关标准与规范。
+    优先从RAG知识库检索标准文档，失败时回退到内置标准列表。
 
     Args:
         keyword: 搜索关键词，例如 GB/T、ISO、ASME
     """
+    # 策略1：优先尝试RAG检索
+    try:
+        query = f"焊接标准 规范 {keyword}"
+        rag_docs = hybrid_search(query, top_k=3)
+        if rag_docs and len(rag_docs) > 0:
+            return {
+                "keyword": keyword,
+                "matched_count": len(rag_docs),
+                "standards": [
+                    {"code": doc.metadata.get("source", ""), "name": doc.page_content[:200]}
+                    for doc in rag_docs
+                ],
+                "source": "RAG知识库检索",
+            }
+    except Exception as e:
+        print(f"[KnowledgeTool] RAG检索失败，回退到内置标准列表: {e}")
+
+    # 策略2：回退到内置硬编码标准列表
     standards = [
         {"code": "GB/T 985.1-2008", "name": "气焊、焊条电弧焊、气体保护焊和高能束焊的推荐坡口"},
         {"code": "GB/T 19867.1-2005", "name": "电弧焊焊接工艺规程"},
@@ -149,7 +208,57 @@ def search_welding_standards(keyword: str) -> dict:
         "keyword": keyword,
         "matched_count": len(matched),
         "standards": matched if matched else standards,
+        "source": "内置标准列表",
     }
 
 
-KNOWLEDGE_TOOLS = [recommend_welding_parameters, diagnose_welding_defect, search_welding_standards]
+@tool
+def rag_search(query: str, top_k: int = 3) -> dict:
+    """通用RAG知识库检索工具。对任意焊接相关问题进行语义检索，返回最相关的知识库内容。
+
+    当用户的问题无法被参数推荐/缺陷诊断等专用工具覆盖时，使用此工具进行开放式检索。
+
+    Args:
+        query: 用户的问题或查询文本
+        top_k: 返回结果数量，默认3条
+    """
+    try:
+        # 使用混合检索（向量+BM25+RRF融合）
+        docs = hybrid_search(query, top_k=top_k, use_query_expansion=True)
+        if not docs:
+            return {
+                "query": query,
+                "results": [],
+                "message": "未在知识库中找到相关内容",
+            }
+
+        results = []
+        for doc in docs:
+            results.append({
+                "content": doc.page_content,
+                "source": doc.metadata.get("source", "unknown"),
+                "category": doc.metadata.get("category", ""),
+                "rrf_score": doc.metadata.get("_rrf_score"),
+            })
+
+        return {
+            "query": query,
+            "result_count": len(results),
+            "results": results,
+            "message": f"从知识库中检索到 {len(results)} 条相关内容",
+        }
+    except Exception as e:
+        return {
+            "query": query,
+            "error": f"RAG检索失败: {str(e)}",
+            "results": [],
+        }
+
+
+# 导出所有工具（供Agent系统注册使用）
+KNOWLEDGE_TOOLS = [
+    recommend_welding_parameters,
+    diagnose_welding_defect,
+    search_welding_standards,
+    rag_search,  # 新增：通用RAG检索工具
+]
