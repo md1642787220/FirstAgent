@@ -36,6 +36,26 @@ PySide6>=6.0
 # 注意：从6.3.0开始，实际需要安装 pyside6-essentials
 # 但 pip install PySide6 会自动依赖它
 
+# ==================== 多源数据加载 —— 文档格式扩展（新增） ====================
+python-pptx>=0.6.21              # PowerPoint 文档解析
+xlrd>=2.0.1                      # 老版 Excel(.xls) 支持
+beautifulsoup4>=4.12.0           # HTML 文本提取
+lxml>=4.9.0                      # XML / HTML 解析加速
+markdown>=3.5.0                  # Markdown 解析
+extract-msg>=0.47.0              # Outlook .msg 邮件解析
+Jinja2>=3.1.2                    # API 响应模板渲染
+jsonpath-ng>=1.6.0               # JSONPath 数据路径提取
+
+# ==================== 数据库驱动（按需安装，按需取消注释） ====================
+# pymysql>=1.1.0                 # MySQL / MariaDB 驱动
+# psycopg2-binary>=2.9.9         # PostgreSQL 驱动
+# pyodbc>=5.0.0                  # SQL Server 驱动 (Windows)
+# cx-Oracle>=8.3.0               # Oracle 驱动（需 Oracle Instant Client）
+
+# ==================== OCR 支持（可选，按需安装） ====================
+# pytesseract>=0.3.10            # OCR 文字识别（需安装 Tesseract-OCR 系统包）
+# Pillow>=10.0.0                 # 图片处理（OCR 前置依赖）
+
 # ==================== 工具库 ====================
 python-dotenv>=1.0.0
 requests

@@ -1,0 +1,137 @@
+# ============================================================================
+# 多源知识数据源配置文件
+# ============================================================================
+# 统一管理文件系统、数据库、API 三大类数据源
+# 敏感信息（密码、Token）请通过环境变量注入，格式: ${ENV_VAR_NAME}
+# ============================================================================
+
+# ==================== 知识文档目录 ====================
+# 所有支持格式的文件（PDF/Word/Excel/PPTX/CSV/JSON/Markdown/HTML/邮件/图片等）
+# 会被自动递归扫描并加载
+docs_dir: "./data/knowledge_docs"
+
+# ==================== 数据库数据源 ====================
+databases:
+  # ---- 示例1: MES焊接生产数据库 (MySQL) ----
+  # - id: mes_welding
+  #   url: "mysql+pymysql://reader:${MES_DB_PASSWORD}@192.168.1.100:3306/welding_mes"
+  #   enabled: false
+  #   tables:
+  #     - name: welding_records
+  #       description: "焊接生产记录"
+  #       limit: 5000
+  #       columns: ["material", "thickness", "current", "voltage", "speed", "operator", "timestamp"]
+  #     - name: process_parameters
+  #       description: "焊接工艺参数历史"
+  #       limit: 3000
+  #   queries:
+  #     - sql: >
+  #         SELECT defect_type, COUNT(*) as count, AVG(repair_time) as avg_repair
+  #         FROM welding_records
+  #         WHERE defect_type IS NOT NULL
+  #         GROUP BY defect_type
+  #       description: "焊接缺陷统计分析"
+
+  # ---- 示例2: ERP物料数据库 (PostgreSQL) ----
+  # - id: erp_materials
+  #   url: "postgresql+psycopg2://reader:${ERP_DB_PASSWORD}@192.168.1.101:5432/erp"
+  #   enabled: false
+  #   queries:
+  #     - sql: >
+  #         SELECT m.code, m.name, m.spec, m.category, m.tensile_strength
+  #         FROM materials m
+  #         WHERE m.category IN ('焊丝', '焊条', '保护气体', '焊接材料')
+  #         ORDER BY m.code
+  #       description: "焊接相关物料清单"
+
+  # ---- 示例3: QMS质量检验数据库 (SQL Server) ----
+  # - id: qms_inspection
+  #   url: "mssql+pyodbc://reader:${QMS_DB_PASSWORD}@192.168.1.102:1433/qms?driver=ODBC+Driver+17+for+SQL+Server"
+  #   enabled: false
+  #   tables:
+  #     - name: weld_inspections
+  #       description: "焊缝质量检验记录"
+  #       limit: 3000
+  #     - name: ndt_results
+  #       description: "无损检测结果（RT/UT/MT/PT）"
+  #       limit: 2000
+
+  # ---- 示例4: 本地SQLite数据库 ----
+  # - id: local_welding
+  #   url: "sqlite:///./data/welding_agent.db"
+  #   enabled: false
+  #   tables:
+  #     - name: work_orders
+  #       description: "焊接工单数据"
+  #       limit: 5000
+  #     - name: boms
+  #       description: "物料清单(BOM)"
+  #       limit: 3000
+
+# ==================== API数据源 ====================
+apis:
+  # ---- 示例1: 企业内部焊接标准API ----
+  # - id: welding_standards
+  #   url: "http://internal-api.example.com/v1/welding/standards"
+  #   method: GET
+  #   headers:
+  #     Authorization: "Bearer ${API_TOKEN}"
+  #   json_path: "$.data[*]"
+  #   template: "标准 {{ item.code }}: {{ item.name }} - {{ item.description }}"
+  #   description: "焊接标准规范库"
+  #   cache_key: "welding_standards"
+
+  # ---- 示例2: 缺陷案例库API ----
+  # - id: defect_cases
+  #   url: "http://internal-api.example.com/v1/welding/defect-cases"
+  #   method: GET
+  #   json_path: "$.results[*]"
+  #   template: |
+  #     [缺陷案例] 缺陷类型: {{ item.type }}
+  #     材料: {{ item.material }}, 厚度: {{ item.thickness }}mm
+  #     原因分析: {{ item.cause }}
+  #     解决方案: {{ item.solution }}
+  #     参考标准: {{ item.standard }}
+  #   description: "焊接缺陷案例库"
+  #   cache_key: "defect_cases"
+
+  # ---- 示例3: 焊接工艺参数推荐API ----
+  # - id: wps_recommendation
+  #   url: "http://internal-api.example.com/v1/welding/wps/recommend"
+  #   method: POST
+  #   headers:
+  #     Content-Type: "application/json"
+  #     Authorization: "Bearer ${API_TOKEN}"
+  #   json_body:
+  #     category: "all"
+  #   json_path: "$.data[*]"
+  #   template: |
+  #     [WPS] 材料 {{ item.material }} {{ item.thickness }}mm:
+  #     焊接方法: {{ item.method }}
+  #     电流范围: {{ item.current_min }}-{{ item.current_max }}A
+  #     电压范围: {{ item.voltage_min }}-{{ item.voltage_max }}V
+  #     焊丝规格: {{ item.wire_type }} Φ{{ item.wire_diameter }}mm
+  #   description: "焊接工艺规程推荐"
+  #   cache_key: "wps_all"
+
+# ==================== 分块配置 ====================
+chunking:
+  chunk_size: 500           # 每个文本块最大字符数
+  chunk_overlap: 50         # 相邻块重叠字符数
+  separators:
+    - "\n\n"                # 优先在段落边界分割
+    - "\n"                  # 其次在行边界
+    - "。"                  # 句子边界（中文）
+    - "."                   # 句子边界（英文）
+    - "；"                  # 分号
+    - " "
+    - ""                    # 最后按字符硬分割
+
+# ==================== 检索配置 ====================
+retrieval:
+  vector_top_k: 5           # 向量语义检索返回候选数
+  bm25_top_k: 5             # BM25关键词检索返回候选数
+  final_top_k: 3            # RRF融合后最终返回结果数
+  rrf_k: 60                 # RRF平滑常数
+  similarity_threshold: 0.7 # 相似度阈值，低于此值的结果丢弃
+  max_tokens_context: 3000  # 注入Prompt的上下文最大Token数
