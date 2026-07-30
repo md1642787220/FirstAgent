@@ -49,3 +49,7 @@ desktop.ini
 
 # CodeBuddy
 .codebuddy/
+
+# Node.js / 前端
+web/node_modules/
+web/dist/
