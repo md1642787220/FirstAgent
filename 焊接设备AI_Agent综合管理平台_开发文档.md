@@ -1,4 +1,4 @@
-# 焊接设备AI Agent综合管理平台 —— 完整项目开发文档
+# XG Agent v2.1.0 —— 焊接智能管理平台 完整项目开发文档
 
 
 ## 一、项目概述
@@ -15,23 +15,26 @@
 
 当前行业趋势是"AI+工业"的深度融合。博清科技推出国内首个工业焊接垂类大模型"际銮"，树根科技"焊接Agent"实现工艺自适应进化，海尔智家通过智能体平台实现"查订单、看库存"一站式入口，首钢股份《热轧生产AI智能体解决方案》入选行业标杆。
 
-本项目旨在为公司构建一个**焊接设备AI Agent综合管理平台**，以桌面客户端为载体，将大模型推理能力与**设备实时监控、生产进度跟踪、BOM智能管理、库存动态分析**深度融合，打造覆盖"设备-工艺-物料-进度"全链路的智能决策中枢。
+本项目为**成都熊谷加世电器有限公司**构建企业级 **XG Agent v2.1.0** 智能管理平台，将大模型推理能力与**设备实时监控、生产进度跟踪、BOM智能管理、库存动态分析、故障智能排查**深度融合，打造覆盖"设备-工艺-物料-进度-故障"全链路的智能决策中枢。前端采用 React + TypeScript + Tailwind CSS 构建 Web 界面，后端采用 FastAPI + LangChain 多 Agent 架构。
 
 ### 1.2 项目目标
 
 | 目标 | 描述 | 量化指标 |
 |------|------|----------|
+| **智能对话交互** | 基于多Agent架构的自然语言对话，DeepSeek token级流式输出 | 首字延迟<2s |
 | **设备实时监控** | 采集并展示焊接设备关键参数，实现异常告警 | 响应延迟<500ms |
 | **智能工艺诊断** | Agent自动分析参数异常，给出优化建议 | 诊断准确率>85% |
+| **故障智能排查** | AI辅助故障诊断 + 焊接故障知识库 | 常见故障覆盖>40类 |
 | **生产进度管理** | 跟踪工单工序状态，自动识别滞后风险 | 进度透明度100% |
 | **BOM智能管理** | BOM自然语言查询、版本对比、变更影响分析 | 查询响应<2s |
 | **库存动态分析** | 实时查询库存水位，自动识别呆滞料风险 | 预警准确率>90% |
-| **工艺知识问答** | 基于焊接知识库回答工艺参数、缺陷处理等问题 | 检索命中率>80% |
-| **轨迹可视化** | 展示Agent"思考-行动"全链路 | 步骤100%可追溯 |
+| **工艺知识问答** | 基于阿里云百炼 Embedding 的 RAG 知识库，支持文档概要 | 检索命中率>80% |
+| **对话历史** | 会话级持久化存储，支持多轮对话切换 | 历史不丢失 |
+| **双主题切换** | 日间/夜间主题自动切换 | 一秒切换 |
 
 ### 1.3 项目范围
 
-- **包含**：Qt桌面客户端、Agent后端服务（FastAPI）、RAG知识库、设备数据模拟/采集接口、生产进度模拟数据、BOM与库存模拟数据
+- **包含**：React Web 前端、Agent后端服务（FastAPI）、RAG知识库（阿里云百炼 Embedding）、DeepSeek LLM、设备/生产/BOM/库存模拟数据、故障排查模块
 - **不包含**：真实ERP/MES系统的数据库直连、硬件改造、PLC底层驱动
 
 ### 1.4 项目定位
@@ -51,18 +54,21 @@
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                              用户层 (UI Layer)                                 │
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
-│  │                    Qt桌面客户端 (PySide6 / Qt6)                          │  │
+│  │                  React Web 前端 (TypeScript + Tailwind CSS)               │  │
 │  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐ │  │
-│  │  │实时监控  │ │生产进度  │ │BOM管理  │ │库存看板  │ │对话交互      │ │  │
-│  │  │仪表盘    │ │看板      │ │面板      │ │          │ │窗口          │ │  │
+│  │  │AI 对话   │ │设备监控  │ │生产进度  │ │BOM管理  │ │库存看板      │ │  │
+│  │  │SSE流式   │ │仪表盘    │ │看板      │ │面板      │ │              │ │  │
 │  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────────┘ │  │
+│  │  ┌──────────────┐ ┌──────────────┐                                       │  │
+│  │  │故障排查中心  │ │知识库管理    │                                       │  │
+│  │  └──────────────┘ └──────────────┘                                       │  │
 │  │  ┌──────────────────────────────────────────────────────────────────────┐ │  │
-│  │  │              Agent执行轨迹追踪面板（全模块统一）                    │ │  │
+│  │  │  特性: Markdown渲染 · 日/夜双主题 · 历史对话 · 停止按钮 · XG品牌   │ │  │
 │  │  └──────────────────────────────────────────────────────────────────────┘ │  │
 │  └───────────────────────────────────────────────────────────────────────────┘  │
-│                                      │ HTTP/WebSocket                          │
+│                                      │ HTTP/SSE                                │
 ├─────────────────────────────────────────────────────────────────────────────────┤
-│                             服务层 (Service Layer)                             │
+│                           服务层 (Service Layer)                               │
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
 │  │              Agent后端服务 (Python / FastAPI / LangGraph)                │  │
 │  │  ┌──────────────────────────────────────────────────────────────────────┐ │  │
@@ -322,16 +328,17 @@ flowchart TD
 
 ## 三、技术栈
 
-### 3.1 Qt桌面客户端
+### 3.1 React Web 前端
 
 | 组件 | 选型 | 说明 |
 |------|------|------|
-| **框架** | PySide6 (Qt6 for Python) | 跨平台、工业级稳定性 |
-| **UI构建** | Qt Widgets + QML混合 | 仪表盘用QML（流畅动画），主界面用Widgets |
-| **图表** | Qt Charts | 实时曲线图、仪表盘、甘特图 |
-| **表格** | Qt TableView + 自定义Delegate | BOM展示、库存列表 |
-| **网络** | Qt Network | HTTP客户端 + WebSocket |
-| **JSON解析** | Qt Core (QJsonDocument) | 与后端API通信 |
+| **框架** | React 19 + TypeScript | 组件化UI开发 |
+| **构建工具** | Vite 6 | 快速HMR + 代理转发 |
+| **样式** | Tailwind CSS 3.4 | 原子化CSS + 日和夜双主题（CSS变量） |
+| **Markdown** | 自研轻量渲染器 | 支持标题/列表/粗体/代码块流式渲染 |
+| **图标** | Lucide React | 600+开源图标 |
+| **路由** | React Router v7 | SPA路由 |
+| **流式通信** | Fetch SSE (自建) | event:/data: 解析，支持answer_chunk token级接收 |
 
 ### 3.2 Agent后端服务
 
@@ -340,10 +347,11 @@ flowchart TD
 | **语言** | Python 3.10+ | |
 | **Web框架** | FastAPI | 高性能异步API服务 |
 | **Agent框架** | LangChain 1.0+ + LangGraph 1.0+ | 核心Agent编排 + 多Agent协作 |
-| **LLM接口** | langchain-openai (OpenAI兼容协议) | 开发阶段直接调用API，部署时切换内网模型地址 |
-| **Embedding** | text-embedding-3-small / 部署时可切换本地模型 | 文档向量化，通过 API 调用 |
-| **向量数据库** | Chroma (本地持久化) | 工艺文档、BOM文档检索 |
-| **关系数据库** | SQLite + SQLAlchemy | 工单、BOM结构化数据、库存 |
+| **LLM接口** | langchain-openai (DeepSeek) | deepseek-chat 模型，流式 token 输出 |
+| **Embedding** | 阿里云百炼 text-embedding-v4 | 1024维向量，OpenAI兼容接口 |
+| **向量数据库** | Chroma (本地持久化) | 工艺文档、知识库检索 |
+| **关系数据库** | SQLite + SQLAlchemy | 工单/BOM/库存 + 对话历史持久化 |
+| **流式通信** | sse-starlette + EventSourceResponse | SSE事件流 (trace_step / answer_chunk / done) |
 | **异步任务** | asyncio + uvicorn | |
 | **数据验证** | Pydantic v2 | |
 
@@ -982,9 +990,11 @@ Document(
 
 | 配置项 | 值 | 说明 |
 |--------|-----|------|
-| Embedding模型 | `text-embedding-3-small` | OpenAI Embedding模型 |
-| 向量维度 | **1536维** | 每个文本块映射为1536个浮点数 |
-| API端点 | `OPENAI_BASE_URL/embeddings` | 开发时直连API，部署时改为内网模型地址 |
+| Embedding模型 | `text-embedding-v4` | 阿里云百炼 Embedding (OpenAI兼容) |
+| 向量维度 | **1024维** | 每个文本块映射为1024个浮点数 |
+| API端点 | `https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings` | 阿里云百炼兼容接口 |
+| batch_size | 10 (OpenAIEmbeddings chunk_size) | 分批发送，避免超20限制 |
+| ctx_length检查 | false (check_embedding_ctx_length=False) | 修复DashScope兼容性问题 |
 
 **Embedding模型的语义理解能力示例：**
 
@@ -1859,7 +1869,11 @@ def get_obsolete_materials(days: int = 180) -> list:
 
 | 接口 | 方法 | 路径 | 说明 |
 |------|------|------|------|
-| **对话** | POST | `/api/chat` | 发送消息，SSE流式返回 |
+| **对话** | POST | `/api/chat` | SSE流式返回 (event: trace_step / answer_chunk / done) |
+| **对话同步** | POST | `/api/chat/sync` | 同步返回完整结果 |
+| **对话历史** | GET | `/api/chat/sessions` | 获取所有历史会话列表 |
+| **历史详情** | GET | `/api/chat/sessions/{id}` | 获取指定会话全部消息 |
+| **删除历史** | DEL | `/api/chat/sessions/{id}` | 删除指定会话 |
 | **设备** | GET | `/api/devices/{id}/metrics` | 获取设备实时参数 |
 | **设备** | GET | `/api/devices/{id}/history` | 获取历史时序数据 |
 | **生产** | GET | `/api/production/orders` | 获取工单列表 |
@@ -1872,10 +1886,21 @@ def get_obsolete_materials(days: int = 180) -> list:
 | **库存** | GET | `/api/inventory` | 查询库存 |
 | **库存** | GET | `/api/inventory/alerts` | 获取预警列表 |
 | **库存** | GET | `/api/inventory/obsolete` | 获取呆滞物料 |
-| **轨迹** | GET | `/api/sessions/{id}/trace` | 获取执行轨迹 |
-| **报告** | POST | `/api/report/generate` | 生成综合报告 |
+| **知识库搜索** | POST | `/api/knowledge/search` | 混合检索（向量+BM25+RRF） |
+| **知识库文档** | GET | `/api/knowledge/documents` | 获取文档列表（含概要） |
+| **知识库上传** | POST | `/api/knowledge/documents/stream` | SSE流式上传（进度反馈） |
+| **故障诊断** | POST | `/api/chat` (复用) | 调用主控Agent进行故障诊断 |
 
-### 7.2 WebSocket事件
+### 7.2 SSE事件类型
+
+| 事件名 | 方向 | 说明 |
+|--------|------|------|
+| `session` | Server → Client | 返回 session_id |
+| `trace_step` | Server → Client | Agent思考/执行轨迹 (think/action/observe) |
+| `answer_chunk` | Server → Client | DeepSeek token级流式回答 |
+| `done` | Server → Client | 流结束标记 |
+
+### 7.3 WebSocket事件
 
 | 事件 | 方向 | 说明 |
 |------|------|------|
@@ -2102,7 +2127,34 @@ Week 5: 测试、打磨与交付                ██████████�
 | 这个项目还是RAG吗？ | RAG是核心组件之一，整体是"RAG+结构化查询+多工具调用"的混合架构 |
 
 
-## 十二、项目交付物清单
+## 十二、v2.1.0 更新日志
+
+### 新增功能
+
+| 功能 | 说明 |
+|------|------|
+| **故障排查中心** | AI智能诊断 + 40+类焊接故障库，支持故障分类浏览和搜索 |
+| **日/夜间双主题** | CSS变量驱动，light/dark一键切换，localStorage持久化 |
+| **对话历史持久化** | SQLite存储 chat_sessions + chat_messages，多轮对话可回溯 |
+| **Markdown流式渲染** | 自研轻量Markdown解析器，支持流式输出时实时渲染 |
+| **停止按钮** | SSE 流式输出可随时中断 |
+| **文档概要** | 知识库每文档自动提取前200字概要 |
+| **语义检索API** | POST /api/knowledge/search 混合检索（向量+BM25+RRF） |
+
+### 技术变更
+
+| 变更项 | v1.0 (旧) | v2.1.0 (新) |
+|--------|-----------|-------------|
+| **前端框架** | Qt (PySide6)桌面应用 | React (TypeScript) Web应用 |
+| **LLM** | OpenAI GPT / DeepSeek | DeepSeek-chat (流式 token 输出) |
+| **Embedding** | text-embedding-3-small | 阿里云百炼 text-embedding-v4 (1024维) |
+| **流式方式** | 一次性返回 | SSE逐token推送 (event: answer_chunk) |
+| **品牌** | 焊接设备AI平台 | XG Agent v2.1.0 (熊谷Logo + 品牌色) |
+| **对话历史** | 无持久化 | SQLite chat_history 表 |
+| **主题** | 仅暗色 | 日间/夜间双主题 |
+
+
+## 附录：环境配置与启动指南
 
 - [ ] 源代码（Qt客户端 + Python后端，GitHub仓库）
 - [ ] README.md（项目介绍、架构图、快速启动指南）
@@ -2124,14 +2176,22 @@ Week 5: 测试、打磨与交付                ██████████�
 
 ```bash
 # 1. 安装Python 3.10+
-# 2. 直接在线安装依赖
-pip install -r requirements.txt
+# 2. 使用 uv 管理依赖
+uv sync
 
-# 3. 配置环境变量（.env文件）
-OPENAI_API_KEY=sk-your-api-key
-OPENAI_BASE_URL=https://api.openai.com/v1       # 或其他兼容API地址
-MODEL_NAME=gpt-4o                                # 或 deepseek-chat 等
-EMBEDDING_MODEL=text-embedding-3-small
+# 3. 安装前端依赖
+cd web && npm install
+
+# 4. 配置环境变量（.env文件）
+# LLM: DeepSeek
+OPENAI_API_KEY=sk-your-deepseek-key
+OPENAI_BASE_URL=https://api.deepseek.com
+MODEL_NAME=deepseek-chat
+
+# Embedding: 阿里云百炼（独立配置）
+EMBEDDING_API_KEY=sk-your-dashscope-key
+EMBEDDING_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+EMBEDDING_MODEL=text-embedding-v4
 ```
 
 **内网部署环境（切换模型地址）：**
@@ -2151,11 +2211,16 @@ EMBEDDING_MODEL=公司部署的Embedding模型名称
 ### A.2 启动服务
 
 ```bash
-# 启动后端服务（开发/部署均可）
-uvicorn src.api.server:app --host 0.0.0.0 --port 8000 --reload
+# 启动后端服务
+uv run python -m uvicorn src.api.server:app --host 0.0.0.0 --port 8000
+# 或双击 start-server.bat
 
-# 启动Qt客户端
-python src/client/main.py
+# 启动前端开发服务器
+cd web && npx vite --port 3000
+# 或双击 start-frontend.bat
+
+# 构建生产版本
+cd web && npx vite build && npx vite preview --port 3000
 ```
 
 ### A.3 外网开发 → 内网部署流程
