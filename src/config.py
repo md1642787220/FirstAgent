@@ -20,7 +20,11 @@ class Settings:
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_BASE_URL: str = os.getenv("OPENAI_BASE_URL", "http://localhost:11434/v1")
     MODEL_NAME: str = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
-    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
+
+    # ===== Embedding 模型配置（独立于 LLM，支持不同厂商）=====
+    EMBEDDING_API_KEY: str = os.getenv("EMBEDDING_API_KEY", os.getenv("OPENAI_API_KEY", ""))
+    EMBEDDING_BASE_URL: str = os.getenv("EMBEDDING_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-v4")
 
     # ===== 应用配置 =====
     APP_HOST: str = os.getenv("APP_HOST", "0.0.0.0")
@@ -33,6 +37,7 @@ class Settings:
 
     # ===== 向量数据库配置 =====
     CHROMA_PERSIST_DIR: str = str(BASE_DIR / os.getenv("CHROMA_PERSIST_DIR", "data/chroma_db"))
+    COLLECTION_NAME: str = os.getenv("COLLECTION_NAME", "welding_knowledge")
     KNOWLEDGE_DOCS_DIR: str = str(BASE_DIR / os.getenv("KNOWLEDGE_DOCS_DIR", "data/knowledge_docs"))
 
     # ===== RAG检索配置 =====

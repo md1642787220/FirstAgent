@@ -2,11 +2,13 @@
 知识库管理REST API
 提供文档上传/删除/列表查询/索引重建/状态查看/检索调试等接口
 """
+import json
 import os
 import time
-from typing import Optional, List
+from typing import Optional, List, AsyncGenerator, Dict
 
 from fastapi import APIRouter, UploadFile, File, Form, Query, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from src.agents.rag.vector_store import get_vector_store, get_stats, init_knowledge_base, build_vector_store
@@ -45,6 +47,7 @@ class DocumentItem(BaseModel):
     source: str = Field(description="文档来源标识")
     chunk_count: int = Field(description="该来源的块数")
     category: Optional[str] = Field(default=None, description="分类标签")
+    summary: Optional[str] = Field(default=None, description="文档内容概要")
 
 
 class DocumentListResponse(BaseModel):
@@ -194,6 +197,116 @@ async def upload_document(
             pass  # 保留文件以便后续重建时使用
 
 
+@router.post("/documents/stream")
+async def upload_document_stream(
+    file: UploadFile = File(...),
+    category: Optional[str] = Form(default=None, description="文档分类"),
+):
+    """流式上传文档，通过 SSE 逐步返回解析→分片→向量化→写入的进度
+
+    事件格式: data: {"step":"parse|chunk|vectorize|done","status":"running|success|error","message":"...","detail":{...}}
+    前端连接 SSE 后逐事件展示流水线进度。
+    """
+
+    allowed_extensions = {
+        ".pdf", ".docx", ".doc", ".xlsx", ".xls", ".pptx",
+        ".csv", ".json", ".xml", ".md", ".html", ".htm",
+        ".eml", ".msg", ".png", ".jpg", ".jpeg", ".gif", ".bmp"
+    }
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in allowed_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"不支持的文件格式: {ext}，允许的格式: {', '.join(sorted(allowed_extensions))}"
+        )
+
+    temp_dir = settings.KNOWLEDGE_DOCS_DIR
+    os.makedirs(temp_dir, exist_ok=True)
+    temp_path = os.path.join(temp_dir, file.filename)
+
+    async def event_generator() -> AsyncGenerator[str, None]:
+        def send(step: str, status: str, message: str, detail: dict = None):
+            """构造一条 SSE data 行"""
+            payload = {"step": step, "status": status, "message": message}
+            if detail:
+                payload["detail"] = detail
+            return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+        try:
+            # ─── Step 0: 保存文件 ───
+            content_bytes = await file.read()
+            with open(temp_path, "wb") as f:
+                f.write(content_bytes)
+            yield send("receive", "success", f"已接收文件: {file.filename}", {"size": len(content_bytes)})
+
+            # ─── Step 1: 解析 ───
+            yield send("parse", "running", "正在解析文档...")
+            documents = load_document(temp_path, source=f"upload:{file.filename}")
+            if not documents:
+                yield send("parse", "error", "未能从文件中提取文本内容，请检查文件是否损坏或为空")
+                yield send("done", "done", "")
+                return
+            yield send("parse", "success", f"解析完成，共 {len(documents)} 页/段", {"pages": len(documents)})
+
+            # ─── Step 2: 分片 ───
+            yield send("chunk", "running", "正在分片...")
+            chunks = split_documents(
+                documents,
+                chunk_size=settings.CHUNK_SIZE,
+                chunk_overlap=settings.CHUNK_OVERLAP,
+            )
+            if not chunks:
+                yield send("chunk", "error", "分片后无有效文本块，请检查文档内容")
+                yield send("done", "done", "")
+                return
+            yield send("chunk", "success", f"分片完成，共 {len(chunks)} 个文档块", {"chunks": len(chunks)})
+
+            # 添加 category 元数据
+            if category:
+                for chunk in chunks:
+                    chunk.metadata["category"] = category
+
+            # ─── Step 3: 向量化 + 写入向量库 ───
+            yield send("vectorize", "running", f"正在向量化并写入 ({len(chunks)} 块)...")
+            store = get_vector_store()
+            if store is None:
+                yield send("vectorize", "error", "向量存储不可用，请检查 ChromaDB 配置")
+                yield send("done", "done", "")
+                return
+
+            texts = [doc.page_content for doc in chunks]
+            metadatas = [doc.metadata for doc in chunks]
+            store.add_texts(texts=texts, metadatas=metadatas)
+            yield send("vectorize", "success", f"向量化并写入完成", {"chunks": len(chunks)})
+
+            # ─── Step 4: 清理缓存 ───
+            yield send("cleanup", "running", "正在刷新缓存...")
+            import src.agents.rag.retriever as retriever_module
+            retriever_module._bm25_corpus = None
+            retriever_module._bm25_docs = None
+            yield send("cleanup", "success", "缓存已刷新")
+
+            # ─── 全部完成 ───
+            yield send("done", "done", f"知识库新增 {len(chunks)} 条记录，文档可立即检索")
+
+        except Exception as e:
+            yield send("error", "error", f"处理异常: {str(e)}")
+            yield send("done", "done", "")
+        finally:
+            # 保留临时文件用于后续重建
+            pass
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
 @router.get("/documents", response_model=DocumentListResponse)
 async def list_documents(
     page: int = Query(default=1, ge=1, description="页码"),
@@ -208,10 +321,32 @@ async def list_documents(
     if source_filter:
         source_dist = {k: v for k, v in source_dist.items() if source_filter in k}
 
-    items = [
-        DocumentItem(source=src, chunk_count=count)
-        for src, count in source_dist.items()
-    ]
+    # 为每个文档生成概要（提取前2个chunk内容合并）
+    store = get_vector_store()
+    items = []
+    for src, count in source_dist.items():
+        summary = None
+        if store and store._collection:
+            try:
+                results = store._collection.get(
+                    where={"source": src},
+                    limit=3,
+                    include=["documents"],
+                )
+                if results and results.get("documents"):
+                    # 合并前几个chunk内容，取前200字作为概要
+                    content = " ".join(d for d in results["documents"] if d)
+                    summary = content[:200].strip()
+                    if len(content) > 200:
+                        summary += "…"
+            except Exception:
+                pass
+
+        items.append(DocumentItem(
+            source=src,
+            chunk_count=count,
+            summary=summary,
+        ))
 
     # 分页
     total = len(items)
@@ -300,6 +435,45 @@ async def rebuild_knowledge_base():
             status_code=500,
             detail=f"重建过程异常: {str(e)}",
         )
+
+
+@router.post("/search", response_model=List[Dict])
+async def search_documents(request: Dict):
+    """语义检索（混合向量 + BM25 + RRF融合）
+
+    Body:
+        query: 用户查询
+        top_k: 返回结果数（默认5）
+        use_query_expansion: 是否启用同义词扩展
+        use_rerank: 是否启用 Cross-Encoder 重排序
+    """
+    try:
+        query = request.get("query", "").strip()
+        if not query:
+            raise HTTPException(status_code=400, detail="查询内容不能为空")
+        top_k = request.get("top_k", 5)
+        use_query_expansion = request.get("use_query_expansion", False)
+        use_rerank = request.get("use_rerank", False)
+
+        docs = hybrid_search(
+            query=query,
+            top_k=top_k,
+            use_query_expansion=use_query_expansion,
+            use_rerank=use_rerank,
+        )
+        results = []
+        for doc in docs:
+            results.append({
+                "content": doc.page_content[:500] + ("..." if len(doc.page_content) > 500 else ""),
+                "source": doc.metadata.get("source", "unknown"),
+                "score": doc.metadata.get("_rrf_score", 0.0),
+                "metadata": {k: v for k, v in doc.metadata.items() if not k.startswith("_")},
+            })
+        return results
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"检索失败: {str(e)}")
 
 
 @router.post("/search-debug", response_model=SearchDebugResponse)

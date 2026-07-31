@@ -20,17 +20,19 @@ def get_embeddings() -> Embeddings:
     Returns:
         可用的 Embeddings 实例
     """
-    # ===== Level 1: OpenAI API（云端）=====
+    # ===== Level 1: 云端 Embedding API（阿里云百炼 / 其他 OpenAI 兼容接口）=====
     try:
         from langchain_openai import OpenAIEmbeddings
-        print("[RAG] ✅ 使用 OpenAI Embedding（云端）")
+        print(f"[RAG] ✅ 使用云端 Embedding: {settings.EMBEDDING_MODEL} @ {settings.EMBEDDING_BASE_URL}")
         return OpenAIEmbeddings(
-            api_key=settings.OPENAI_API_KEY,
-            base_url=settings.OPENAI_BASE_URL,
+            api_key=settings.EMBEDDING_API_KEY,
+            base_url=settings.EMBEDDING_BASE_URL,
             model=settings.EMBEDDING_MODEL,
+            check_embedding_ctx_length=False,  # 修复 DashScope 兼容接口 ctx 长度检查的非标格式报错
+            chunk_size=10,                       # 阿里云百炼限制单批≤10条，分批发送
         )
     except Exception as e:
-        print(f"[RAG] ⚠️ OpenAI Embedding不可用({e})，尝试本地模型...")
+        print(f"[RAG] [WARN] 云端 Embedding 不可用({e})，尝试本地模型...")
 
     # ===== Level 2: 本地 BGE 中文模型（sentence_transformers）=====
     try:
@@ -47,10 +49,10 @@ def get_embeddings() -> Embeddings:
         print(f"[RAG] ✅ 使用本地 Embedding 模型: {model_name}")
         return embeddings
     except Exception as e:
-        print(f"[RAG] ⚠️ 本地Embedding模型不可用({e})，降级到Fallback...")
+        print(f"[RAG] [WARN] 本地Embedding模型不可用({e})，降级到Fallback...")
 
     # ===== Level 3: MD5 哈希 Fallback（仅测试）=====
-    print("[RAG] ❌ 使用 MD5 Fallback Embedding（无语义能力，仅适用于测试！）")
+    print("[RAG] [ERROR] 使用 MD5 Fallback Embedding（无语义能力，仅适用于测试！）")
     return _FallbackEmbedding()
 
 
@@ -92,7 +94,7 @@ def get_vector_store() -> Optional[object]:
         from langchain_chroma import Chroma
         embeddings = get_embeddings()
         _vector_store = Chroma(
-            collection_name="welding_knowledge",
+            collection_name=settings.COLLECTION_NAME,
             embedding_function=embeddings,
             persist_directory=settings.CHROMA_PERSIST_DIR,
         )
@@ -111,7 +113,7 @@ def build_vector_store(documents: List[Document]) -> bool:
         store = Chroma.from_documents(
             documents=documents,
             embedding=embeddings,
-            collection_name="welding_knowledge",
+            collection_name=settings.COLLECTION_NAME,
             persist_directory=settings.CHROMA_PERSIST_DIR,
         )
         global _vector_store

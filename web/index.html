@@ -1,12 +1,23 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="dark">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>焊接设备AI Agent综合管理平台</title>
+    <title>XG Agent v2.1.0</title>
+    <script>
+      // 防止页面闪烁: 在React初始化前同步读取主题
+      (function() {
+        var theme = localStorage.getItem('xg-theme');
+        if (theme === 'light' || !theme) {
+          document.documentElement.classList.remove('dark');
+        } else {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
-  <body class="bg-industrial-bg text-industrial-text antialiased">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

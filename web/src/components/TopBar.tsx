@@ -1,13 +1,16 @@
 import type { AppState } from '../App'
-import { Wifi, WifiOff, AlertTriangle, Cpu, Clock } from 'lucide-react'
+import { Wifi, WifiOff, AlertTriangle, Cpu, Clock, Sun, Moon } from 'lucide-react'
+import { useTheme } from '../contexts/ThemeContext'
 
 interface Props {
   appState: AppState
 }
 
 export default function TopBar({ appState }: Props) {
+  const { theme, toggle } = useTheme()
+
   return (
-    <header className="fixed top-0 right-0 z-10 flex h-[52px] items-center justify-between border-b border-industrial-border bg-industrial-sidebar/80 backdrop-blur-md px-6" style={{ left: '240px' }}>
+    <header className="fixed top-0 right-0 z-10 flex h-[52px] items-center justify-between border-b border-industrial-border bg-industrial-sidebar/80 backdrop-blur-md px-6 transition-colors duration-300" style={{ left: '240px' }}>
       {/* 左侧：LLM 连接状态 */}
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">
@@ -34,8 +37,19 @@ export default function TopBar({ appState }: Props) {
         </div>
       </div>
 
-      {/* 右侧：告警数 + 时间 */}
+      {/* 右侧：主题切换 + 告警数 + 时间 */}
       <div className="flex items-center gap-6">
+        {/* 主题切换 */}
+        <button
+          onClick={toggle}
+          title={theme === 'dark' ? '切换日间模式' : '切换夜间模式'}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-industrial-text-muted hover:bg-industrial-card-hover hover:text-industrial-accent transition-all duration-200"
+        >
+          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
+
+        <div className="h-4 w-px bg-industrial-border"></div>
+
         <div className="flex items-center gap-2">
           <AlertTriangle className={`h-4 w-4 ${appState.alertCount > 0 ? 'text-industrial-accent' : 'text-industrial-text-muted'}`} />
           <span className={`text-xs ${appState.alertCount > 0 ? 'text-industrial-accent font-medium' : 'text-industrial-text-muted'}`}>

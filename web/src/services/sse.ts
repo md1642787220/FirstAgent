@@ -49,6 +49,7 @@ class SSEService {
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
       let buffer = ''
+      let currentEvent = ''
 
       while (true) {
         const { done, value } = await reader.read()
@@ -63,20 +64,50 @@ class SSEService {
           if (!trimmed || trimmed.startsWith(':')) continue
 
           if (trimmed.startsWith('event:')) {
-            // next line should be data:
+            currentEvent = trimmed.slice(6).trim()
             continue
           }
 
           if (trimmed.startsWith('data:')) {
             const dataStr = trimmed.slice(5).trim()
-            if (dataStr === '[DONE]') {
+
+            // Dispatch using explicit event type from backend
+            if (currentEvent === 'done' || dataStr === '[DONE]') {
               this.messageHandler?.('done', null)
+              currentEvent = ''
               continue
             }
 
+            if (currentEvent === 'answer_chunk') {
+              // answer_chunk data is a plain string (token)
+              this.messageHandler?.('answer_chunk', dataStr)
+              continue
+            }
+
+            if (currentEvent === 'trace_step') {
+              try {
+                const data = JSON.parse(dataStr)
+                this.messageHandler?.('trace_step', data)
+              } catch {
+                console.error('[SSE] Parse trace_step:', dataStr)
+              }
+              continue
+            }
+
+            // Fallback: try JSON auto-detect (backward compat)
+            if (currentEvent === 'answer') {
+              try {
+                const data = JSON.parse(dataStr)
+                this.messageHandler?.('answer', data)
+              } catch {
+                this.messageHandler?.('answer', dataStr)
+              }
+              continue
+            }
+
+            // Unknown event, try JSON parse as answer (legacy)
             try {
               const data = JSON.parse(dataStr)
-              // Determine event type from context or assume answer
               if (data.step_type) {
                 this.messageHandler?.('trace_step', data)
               } else if (data.session_id) {
@@ -85,7 +116,8 @@ class SSEService {
                 this.messageHandler?.('message', data)
               }
             } catch {
-              console.error('[SSE] Parse error:', dataStr)
+              // Plain string - might be answer_chunk
+              this.messageHandler?.('message', dataStr)
             }
           }
         }

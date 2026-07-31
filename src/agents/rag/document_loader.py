@@ -1191,6 +1191,27 @@ class UnifiedKnowledgeLoader:
 # 公共接口（向后兼容）
 # ============================================================================
 
+def load_document(file_path: str, source: Optional[str] = None) -> List[Document]:
+    """加载单个文档文件（用于API上传场景）
+
+    Args:
+        file_path: 文件路径
+        source: 来源标识（可选）
+
+    Returns:
+        Document列表
+    """
+    loader = FileDocumentLoader()
+    documents = loader.load_file(file_path)
+
+    # 如果指定了source，更新metadata
+    if source:
+        for doc in documents:
+            doc.metadata["source"] = source
+
+    return documents
+
+
 def prepare_documents(docs_dir: str) -> List[Document]:
     """准备知识库文档（向后兼容旧接口）
 

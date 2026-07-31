@@ -200,3 +200,49 @@ class Inventory(Base):
             "supplier": self.supplier,
             "unit_cost": self.unit_cost,
         }
+
+
+# ============================================================
+# 对话历史表
+# ============================================================
+
+class ChatSession(Base):
+    """对话会话表"""
+    __tablename__ = "chat_sessions"
+
+    id = Column(Text, primary_key=True)                # session_id: sess_xxxxxxxx
+    title = Column(Text, default="新对话")              # 会话标题（取首条消息前若干字）
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "created_at": str(self.created_at),
+            "updated_at": str(self.updated_at),
+        }
+
+
+class ChatMessage(Base):
+    """对话消息表"""
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(Text, ForeignKey("chat_sessions.id"), nullable=False)
+    role = Column(Text, nullable=False)                # user / assistant
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
+
+    session = relationship("ChatSession", back_populates="messages")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "session_id": self.session_id,
+            "role": self.role,
+            "content": self.content,
+            "created_at": str(self.created_at),
+        }

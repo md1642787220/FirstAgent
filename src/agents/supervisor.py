@@ -305,30 +305,15 @@ def format_answer(user_input: str, intent: IntentType, results: list) -> str:
 
     raw_text = "\n\n".join(results_summary)
 
+    # 构建提示词
+    system_prompt, user_prompt = _build_prompt(user_input, intent, results, raw_text)
+
     # 尝试调用LLM生成自然语言回答
     try:
         from langchain_openai import ChatOpenAI
         from src.config import settings
 
         llm = ChatOpenAI(**settings.llm_kwargs)
-
-        system_prompt = """你是焊接AI助手，负责将各专业Agent的查询结果转化为专业、简洁、友好的中文回答。
-
-规则：
-1. 用自然语言总结数据，不要直接输出原始JSON
-2. 突出关键数值和结论
-3. 如果有异常/告警信息，优先提醒
-4. 回答要简洁，控制在200字以内
-5. 使用专业的焊接术语"""
-
-        user_prompt = f"""用户问题: {user_input}
-识别意图: {intent.value}
-
-各Agent查询结果:
-{raw_text}
-
-请根据以上查询结果，用中文回答用户问题："""
-
         response = llm.invoke([
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
@@ -345,18 +330,153 @@ def format_answer(user_input: str, intent: IntentType, results: list) -> str:
     except Exception as e:
         # LLM调用失败时降级到模板回复
         print(f"[Supervisor] LLM调用失败，使用模板回复: {e}")
-        parts = []
-        for r in results:
-            agent = r.get("agent", "")
-            data = r.get("data", {})
-            if "error" in r:
-                parts.append(f"[{agent}] 执行出错: {r['error']}")
-            else:
-                parts.append(f"[{agent}] 查询结果:\n{format_data(data)}")
-        fallback_answer = "\n\n".join(parts)
-        if len(results) > 1:
-            fallback_answer = f"您的问题涉及多个领域，已分别调用相关Agent处理：\n\n{fallback_answer}"
-        return fallback_answer
+        return _fallback_answer(results, raw_text)
+
+
+def _build_prompt(user_input: str, intent: IntentType, results: list, raw_text: str) -> tuple[str, str]:
+    """构建LLM提示词"""
+    system_prompt = """你是专业焊接AI助手，负责将各Agent的查询结果转化为结构清晰的中文回答。
+
+格式要求（必须使用 Markdown）：
+1. 用自然语言总结数据，严禁直接输出原始JSON
+2. **关键数值和结论使用粗体标记**
+3. 使用 `- ` 或 `1. ` 进行编号/列表排版，每条建议一行
+4. 段落之间空一行，保持合理换行
+5. 数据较多时使用二级/三级标题 `## ` `### ` 分类
+6. 有异常/告警信息时放在最前面，用 **⚠️ 注意** 开头
+7. 使用专业焊接术语
+8. 引用具体数值时使用 `数值` 行内代码样式"""
+
+    user_prompt = f"""用户问题: {user_input}
+识别意图: {intent.value}
+
+各Agent查询结果:
+{raw_text}
+
+请根据以上查询结果，用中文回答用户问题："""
+
+    return system_prompt, user_prompt
+
+
+def _fallback_answer(results: list, raw_text: str) -> str:
+    """LLM不可用时的模板降级回复"""
+    parts = []
+    for r in results:
+        agent = r.get("agent", "")
+        data = r.get("data", {})
+        if "error" in r:
+            parts.append(f"[{agent}] 执行出错: {r['error']}")
+        else:
+            parts.append(f"[{agent}] 查询结果:\n{format_data(data)}")
+    fallback_answer = "\n\n".join(parts)
+    if len(results) > 1:
+        fallback_answer = f"您的问题涉及多个领域，已分别调用相关Agent处理：\n\n{fallback_answer}"
+    return fallback_answer
+
+
+def supervisor_chat_stream(user_input: str, session_id: Optional[str] = None):
+    """主控Agent流式对话入口 — 逐token返回答案
+    
+    Yields:
+        {"event": "trace_step", "data": {...}}  — 轨迹步骤
+        {"event": "answer_chunk", "data": "..."} — 答案片段(token级别)
+        {"event": "done", "data": "[DONE]"}      — 流结束
+    """
+    yield from _supervisor_chat_stream_impl(user_input, session_id)
+
+
+def _supervisor_chat_stream_impl(user_input: str, session_id: Optional[str]):
+    trace = create_trace(session_id)
+    start_time = time.time()
+
+    # === 意图识别 ===
+    yield {"event": "trace_step", "data": {
+        "step_type": "think",
+        "agent": "主控Agent",
+        "phase": "routing",
+        "content": f"分析用户输入: {user_input}",
+        "timestamp": time.time(),
+    }}
+    
+    intent, sub_intents = classify_intent(user_input)
+    routed_intents = sub_intents if sub_intents else [intent]
+    
+    yield {"event": "trace_step", "data": {
+        "step_type": "think",
+        "agent": "主控Agent",
+        "phase": "routing",
+        "content": f"识别意图: {intent.value}，路由到 {len(routed_intents)} 个Agent",
+        "timestamp": time.time(),
+    }}
+
+    # === 执行专业Agent ===
+    all_results = []
+    for it in routed_intents:
+        agent_fn = AGENT_ROUTERS.get(it)
+        if agent_fn:
+            try:
+                result = agent_fn(user_input, trace)
+                all_results.append(result)
+            except Exception as e:
+                all_results.append({"agent": it.value, "error": str(e)})
+
+    # 发送所有轨迹步骤
+    for step in trace.get_trace()["steps"]:
+        yield {"event": "trace_step", "data": step}
+
+    # === 流式生成回答 ===
+    if not results_available(all_results):
+        yield {"event": "answer_chunk", "data": "抱歉，未能处理您的请求。"}
+        yield {"event": "done", "data": "[DONE]"}
+        return
+
+    # 构建Agent结果摘要
+    results_summary = []
+    for r in all_results:
+        agent = r.get("agent", "")
+        data = r.get("data", {})
+        if "error" in r:
+            results_summary.append(f"[{agent}] 执行出错: {r['error']}")
+        else:
+            results_summary.append(f"[{agent}]:\n{format_data(data)}")
+    raw_text = "\n\n".join(results_summary)
+
+    system_prompt, user_prompt = _build_prompt(user_input, intent, all_results, raw_text)
+
+    # 尝试流式调用LLM
+    try:
+        from langchain_openai import ChatOpenAI
+        from src.config import settings
+
+        llm = ChatOpenAI(**settings.llm_kwargs, streaming=True)
+
+        # 多Agent前缀
+        if len(all_results) > 1:
+            yield {"event": "answer_chunk", "data": "您的问题涉及多个领域，已分别调用相关Agent处理：\n\n"}
+
+        for chunk in llm.stream([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]):
+            if chunk.content:
+                yield {"event": "answer_chunk", "data": chunk.content}
+
+    except Exception as e:
+        print(f"[Supervisor] LLM流式调用失败({e})，降级到模板回复")
+        fallback = _fallback_answer(all_results, raw_text)
+        yield {"event": "answer_chunk", "data": fallback}
+
+    # 记录总耗时
+    trace.add_step(agent="主控Agent", phase=TracePhase.ANSWER,
+                   thought="流式生成回答完成", action="generate_answer_stream",
+                   duration_ms=int((time.time() - start_time) * 1000))
+
+    yield {"event": "done", "data": "[DONE]"}
+
+
+def results_available(results: list) -> bool:
+    """检查是否有有效结果"""
+    return bool(results)
 
 
 def format_data(data: dict, indent: int = 0) -> str:

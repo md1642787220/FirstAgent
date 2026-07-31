@@ -57,6 +57,7 @@ dependencies = [
     "pydantic>=2.0",
     # 测试
     "pytest>=8.0",
+    "langchain-chroma>=1.1.0",
 ]
 
 # 可选依赖分组：按需安装，例如 uv sync --extra db-mysql

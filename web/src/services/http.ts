@@ -1,4 +1,10 @@
-const API_BASE = '/api'
+// 直连后端（CORS已在后端开启）
+const API_BASE = 'http://localhost:8000/api'
+
+// 导出方便 SSE 等服务使用
+export function apiUrl(path: string): string {
+  return `${API_BASE}${path}`
+}
 
 interface ApiError {
   message: string
@@ -27,11 +33,17 @@ export const api = {
   },
 
   async post<T>(url: string, body?: unknown): Promise<T> {
+    const isFormData = body instanceof FormData
     const response = await fetch(`${API_BASE}${url}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: body ? JSON.stringify(body) : undefined,
+      headers: isFormData ? undefined : { 'Content-Type': 'application/json' },
+      body: isFormData ? (body as FormData) : (body ? JSON.stringify(body) : undefined),
     })
+    return handleResponse<T>(response)
+  },
+
+  async del<T>(url: string): Promise<T> {
+    const response = await fetch(`${API_BASE}${url}`, { method: 'DELETE' })
     return handleResponse<T>(response)
   },
 

@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -8,21 +9,22 @@ export default {
     extend: {
       colors: {
         industrial: {
-          bg: '#0A0F1A',
-          sidebar: '#0D1526',
-          card: '#111827',
-          'card-hover': '#1a2332',
-          border: '#1e293b',
-          primary: '#3B82F6',
-          'primary-hover': '#2563EB',
-          accent: '#FA8C16',
-          success: '#10B981',
-          danger: '#EF4444',
-          warning: '#F59E0B',
-          info: '#06B6D4',
-          text: '#E2E8F0',
-          'text-secondary': '#94A3B8',
-          'text-muted': '#64748B',
+          bg: 'rgb(var(--industrial-bg) / <alpha-value>)',
+          sidebar: 'rgb(var(--industrial-sidebar) / <alpha-value>)',
+          card: 'rgb(var(--industrial-card) / <alpha-value>)',
+          'card-hover': 'rgb(var(--industrial-card-hover) / <alpha-value>)',
+          border: 'rgb(var(--industrial-border) / <alpha-value>)',
+          primary: 'rgb(var(--industrial-primary) / <alpha-value>)',
+          'primary-hover': 'rgb(var(--industrial-primary-hover) / <alpha-value>)',
+          accent: 'rgb(var(--industrial-accent) / <alpha-value>)',
+          'accent-hover': 'rgb(var(--industrial-accent-hover) / <alpha-value>)',
+          success: 'rgb(var(--industrial-success) / <alpha-value>)',
+          danger: 'rgb(var(--industrial-danger) / <alpha-value>)',
+          warning: 'rgb(var(--industrial-warning) / <alpha-value>)',
+          info: 'rgb(var(--industrial-info) / <alpha-value>)',
+          text: 'rgb(var(--industrial-text) / <alpha-value>)',
+          'text-secondary': 'rgb(var(--industrial-text-secondary) / <alpha-value>)',
+          'text-muted': 'rgb(var(--industrial-text-muted) / <alpha-value>)',
         },
       },
       fontFamily: {
@@ -32,15 +34,20 @@ export default {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'glow': 'glow 2s ease-in-out infinite alternate',
         'typing': 'blink 1s step-end infinite',
+        'float': 'float 4s ease-in-out infinite',
       },
       keyframes: {
         glow: {
-          '0%': { boxShadow: '0 0 5px rgba(59, 130, 246, 0.3)' },
-          '100%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.6)' },
+          '0%': { boxShadow: '0 0 5px rgba(var(--industrial-accent), 0.2)' },
+          '100%': { boxShadow: '0 0 20px rgba(var(--industrial-accent), 0.4)' },
         },
         blink: {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-6px)' },
         },
       },
     },

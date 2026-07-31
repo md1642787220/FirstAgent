@@ -2,6 +2,14 @@
 FastAPI应用入口
 注册所有路由，配置CORS，启动时初始化数据库与知识库
 """
+import sys
+import io
+
+# 强制 UTF-8 编码（修复 Windows GBK 下 emoji 报错问题）
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI

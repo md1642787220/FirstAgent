@@ -110,7 +110,7 @@ def _get_reranker():
         print(f"[RAG] ✅ Cross-Encoder 重排序模型已加载: {model_name}")
         return _reranker
     except Exception as e:
-        print(f"[RAG] ⚠️ Cross-Encoder 模型加载失败({e})，禁用重排序功能")
+        print(f"[RAG] [WARN] Cross-Encoder 模型加载失败({e})，禁用重排序功能")
         _reranker = False  # 标记为已尝试加载但失败，避免重复尝试
         return None
 
@@ -301,7 +301,7 @@ def _rerank_with_cross_encoder(
         return result
 
     except Exception as e:
-        print(f"[RAG] ⚠️ Cross-Encoder 重排序失败({e})，返回原始顺序")
+        print(f"[RAG] [WARN] Cross-Encoder 重排序失败({e})，返回原始顺序")
         return documents[:top_k]
 
 
