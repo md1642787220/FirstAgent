@@ -29,11 +29,34 @@ export default function App() {
     setState(prev => ({ ...prev, ...updates }))
   }, [])
 
-  // 启动时检查后端连接状态
+  // 检查后端连接状态（未连接时自动重试）
   useEffect(() => {
-    api.health()
-      .then(() => updateState({ llmConnected: true }))
-      .catch(() => updateState({ llmConnected: false }))
+    let cancelled = false
+
+    const checkHealth = async () => {
+      try {
+        await api.health()
+        if (!cancelled) updateState({ llmConnected: true })
+        return true
+      } catch {
+        if (!cancelled) updateState({ llmConnected: false })
+        return false
+      }
+    }
+
+    // 立即检查一次
+    checkHealth()
+
+    // 未连接时每 3 秒重试，连接成功后停止
+    const timer = setInterval(async () => {
+      const ok = await checkHealth()
+      if (ok) clearInterval(timer)
+    }, 3000)
+
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+    }
   }, [updateState])
 
   return (
