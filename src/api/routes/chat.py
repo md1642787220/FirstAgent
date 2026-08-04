@@ -16,6 +16,9 @@ router = APIRouter()
 class ChatRequest(BaseModel):
     message: str
     session_id: str = None
+    # 用户角色：expert 专家 / beginner 新手 / user 普通用户（默认）
+    # 用于动态生成系统提示词，让AI回答风格匹配用户角色
+    user_role: str = "user"
 
 
 @router.post("/chat")
@@ -25,6 +28,9 @@ async def chat(req: ChatRequest):
     actual_sid = req.session_id or f"sess_{uuid.uuid4().hex[:8]}"
     full_answer = ""
 
+    # 规范化 user_role，防止传入非法值
+    user_role = req.user_role if req.user_role in ("expert", "beginner", "user") else "user"
+
     async def event_generator():
         nonlocal full_answer
 
@@ -32,7 +38,7 @@ async def chat(req: ChatRequest):
         _save_message(actual_sid, "user", req.message)
 
         # 流式生成回答
-        for chunk in supervisor_chat_stream(req.message, actual_sid):
+        for chunk in supervisor_chat_stream(req.message, actual_sid, user_role=user_role):
             event = chunk.get("event", "message")
             data = chunk.get("data", "")
 
@@ -129,7 +135,8 @@ def _save_message(session_id: str, role: str, content: str):
 @router.post("/chat/sync")
 async def chat_sync(req: ChatRequest):
     """对话接口 - 同步返回完整结果"""
-    result = supervisor_chat(req.message, req.session_id)
+    user_role = req.user_role if req.user_role in ("expert", "beginner", "user") else "user"
+    result = supervisor_chat(req.message, req.session_id, user_role=user_role)
     return {
         "session_id": result["session_id"],
         "intent": result["intent"],

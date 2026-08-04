@@ -14,7 +14,7 @@ const navItems = [
   { path: '/', label: 'AI 对话', icon: MessageSquare },
   { path: '/devices', label: '设备监控', icon: Activity },
   { path: '/production', label: '生产进度', icon: ClipboardList },
-  { path: '/bom', label: 'BOM 管理', icon: PackageOpen },
+  { path: '/bom', label: '传感器BOM', icon: PackageOpen },
   { path: '/inventory', label: '库存分析', icon: Warehouse },
   { path: '/trace', label: '执行轨迹', icon: GitBranch },
   { path: '/troubleshoot', label: '故障排查', icon: Wrench },

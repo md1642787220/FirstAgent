@@ -100,8 +100,8 @@ export default function BOMPage() {
           <PackageOpen className="h-5 w-5 text-purple-400" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold text-industrial-text">BOM 齐套管理</h1>
-          <p className="text-xs text-industrial-text-muted">物料清单管理与库存齐套分析</p>
+          <h1 className="text-lg font-semibold text-industrial-text">传感器BOM 齐套管理</h1>
+          <p className="text-xs text-industrial-text-muted">传感器物料清单管理与库存齐套分析</p>
         </div>
       </div>
 

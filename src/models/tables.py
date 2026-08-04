@@ -246,3 +246,35 @@ class ChatMessage(Base):
             "content": self.content,
             "created_at": str(self.created_at),
         }
+
+
+# ============================================================
+# 故障库表
+# ============================================================
+
+class FaultRecord(Base):
+    """故障记录表 — 用于日常积累常见故障，供新人排查参考"""
+    __tablename__ = "fault_records"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    symptom = Column(Text, nullable=False)             # 故障现象
+    category = Column(Text, nullable=False)            # 故障类别（起弧异常/焊缝缺陷/...）
+    device_type = Column(Text)                         # 设备/传感器类型（MIG焊机/TIG焊机/...，可空）
+    cause = Column(Text)                               # 可能原因
+    solution = Column(Text)                            # 解决方案
+    severity = Column(Text, default="medium")          # high/medium/low
+    recorder = Column(Text, default="系统")             # 记录人
+    created_at = Column(DateTime, default=datetime.now)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "symptom": self.symptom,
+            "category": self.category,
+            "device_type": self.device_type,
+            "cause": self.cause,
+            "solution": self.solution,
+            "severity": self.severity,
+            "recorder": self.recorder,
+            "created_at": str(self.created_at) if self.created_at else None,
+        }

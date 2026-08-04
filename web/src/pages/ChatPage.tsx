@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Send, User, ChevronDown, ChevronUp, Sparkles, Square, History, Plus, Trash2, Clock } from 'lucide-react'
+import { Send, User, ChevronDown, ChevronUp, Sparkles, Square, History, Plus, Trash2, Clock, GraduationCap, Briefcase, Users } from 'lucide-react'
 import sseService, { ChatMessage, TraceStep } from '../services/sse'
 import api, { apiUrl } from '../services/http'
 import Markdown from '../components/Markdown'
@@ -22,6 +22,14 @@ const QUICK_QUESTIONS = [
   '推荐焊接工艺参数',
 ]
 
+// 用户角色选项 — 控制后端动态系统提示词风格
+type UserRole = 'beginner' | 'user' | 'expert'
+const ROLE_OPTIONS: { value: UserRole; label: string; desc: string; icon: React.ReactNode }[] = [
+  { value: 'beginner', label: '新手', desc: '通俗易懂，避免术语', icon: <GraduationCap className="h-3.5 w-3.5" /> },
+  { value: 'user',     label: '普通', desc: '简洁清晰，重点突出', icon: <Users className="h-3.5 w-3.5" /> },
+  { value: 'expert',   label: '专家', desc: '详细技术，可操作方案', icon: <Briefcase className="h-3.5 w-3.5" /> },
+]
+
 export default function ChatPage({ updateAppState }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -31,6 +39,7 @@ export default function ChatPage({ updateAppState }: Props) {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [historyOpen, setHistoryOpen] = useState(true)
+  const [userRole, setUserRole] = useState<UserRole>('user')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -173,8 +182,8 @@ export default function ChatPage({ updateAppState }: Props) {
       ))
     })
 
-    sseService.connect(apiUrl('/chat'), { message: messageText, session_id: sessionId })
-  }, [input, isStreaming, sessionId, currentTrace])
+    sseService.connect(apiUrl('/chat'), { message: messageText, session_id: sessionId, user_role: userRole })
+  }, [input, isStreaming, sessionId, currentTrace, userRole])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -255,14 +264,44 @@ export default function ChatPage({ updateAppState }: Props) {
 
       {/* 对话区域 */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
-        {/* 页面标题 */}
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-industrial-primary/20 to-blue-600/20 border border-industrial-primary/30">
-            <Sparkles className="h-5 w-5 text-industrial-primary" />
+        {/* 页面标题 + 动态提示词角色选择器 */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-industrial-primary/20 to-blue-600/20 border border-industrial-primary/30">
+              <Sparkles className="h-5 w-5 text-industrial-primary" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-industrial-text">AI 智能助手</h1>
+              <p className="text-xs text-industrial-text-muted">基于多Agent架构的智能焊接管理平台</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg font-semibold text-industrial-text">AI 智能助手</h1>
-            <p className="text-xs text-industrial-text-muted">基于多Agent架构的智能焊接管理平台</p>
+
+          {/* 动态提示词 — 用户角色选择器（segmented control） */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-industrial-text-muted hidden sm:inline">动态提示词</span>
+            <div className="inline-flex items-center rounded-lg border border-industrial-border bg-industrial-card/60 p-0.5">
+              {ROLE_OPTIONS.map(opt => {
+                const active = userRole === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setUserRole(opt.value)}
+                    title={opt.desc}
+                    className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200 ${
+                      active
+                        ? 'bg-industrial-primary text-white shadow-sm'
+                        : 'text-industrial-text-secondary hover:text-industrial-text hover:bg-industrial-card-hover/60'
+                    }`}
+                  >
+                    {opt.icon}
+                    <span>{opt.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <span className="text-[10px] text-industrial-text-muted hidden md:inline whitespace-nowrap">
+              {ROLE_OPTIONS.find(o => o.value === userRole)?.desc}
+            </span>
           </div>
         </div>
 

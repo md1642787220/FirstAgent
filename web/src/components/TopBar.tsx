@@ -1,6 +1,7 @@
 import type { AppState } from '../App'
-import { Wifi, WifiOff, AlertTriangle, Cpu, Clock, Sun, Moon } from 'lucide-react'
+import { Wifi, WifiOff, AlertTriangle, Cpu, Clock, Sun, Moon, LogOut, UserCircle } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
+import { useAuth } from '../contexts/AuthContext'
 
 interface Props {
   appState: AppState
@@ -8,6 +9,7 @@ interface Props {
 
 export default function TopBar({ appState }: Props) {
   const { theme, toggle } = useTheme()
+  const { user, logout } = useAuth()
 
   return (
     <header className="fixed top-0 right-0 z-10 flex h-[52px] items-center justify-between border-b border-industrial-border bg-industrial-sidebar/80 backdrop-blur-md px-6 transition-colors duration-300" style={{ left: '240px' }}>
@@ -37,8 +39,18 @@ export default function TopBar({ appState }: Props) {
         </div>
       </div>
 
-      {/* 右侧：主题切换 + 告警数 + 时间 */}
+      {/* 右侧：当前用户 + 主题切换 + 告警数 + 时间 + 退出 */}
       <div className="flex items-center gap-6">
+        {/* 当前登录用户 */}
+        {user && (
+          <div className="flex items-center gap-1.5">
+            <UserCircle className="h-4 w-4 text-industrial-primary" />
+            <span className="text-xs text-industrial-text-secondary">{user.username}</span>
+          </div>
+        )}
+
+        <div className="h-4 w-px bg-industrial-border"></div>
+
         {/* 主题切换 */}
         <button
           onClick={toggle}
@@ -63,6 +75,17 @@ export default function TopBar({ appState }: Props) {
           <Clock className="h-4 w-4 text-industrial-text-muted" />
           <TopBarTime />
         </div>
+
+        <div className="h-4 w-px bg-industrial-border"></div>
+
+        {/* 退出登录 */}
+        <button
+          onClick={logout}
+          title="退出登录"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-industrial-text-muted hover:bg-industrial-danger/10 hover:text-industrial-danger transition-all duration-200"
+        >
+          <LogOut className="h-4 w-4" />
+        </button>
       </div>
     </header>
   )

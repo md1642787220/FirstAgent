@@ -244,8 +244,14 @@ AGENT_ROUTERS = {
 }
 
 
-def supervisor_chat(user_input: str, session_id: Optional[str] = None) -> dict:
-    """主控Agent对话入口"""
+def supervisor_chat(user_input: str, session_id: Optional[str] = None, user_role: str = "user") -> dict:
+    """主控Agent对话入口
+
+    Args:
+        user_input: 用户问题
+        session_id: 会话ID（可选）
+        user_role: 用户角色 — expert 专家 / beginner 新手 / user 普通用户
+    """
     trace = create_trace(session_id)
     start_time = time.time()
 
@@ -272,7 +278,7 @@ def supervisor_chat(user_input: str, session_id: Optional[str] = None) -> dict:
                 trace.add_step(agent=it.value, phase=TracePhase.OBSERVATION, observation=f"执行出错: {e}")
 
     # 生成回答
-    answer = format_answer(user_input, intent, all_results)
+    answer = format_answer(user_input, intent, all_results, user_role=user_role)
     trace.add_step(agent="主控Agent", phase=TracePhase.ANSWER,
                    thought="聚合各Agent结果", action="generate_answer",
                    observation=answer[:200], duration_ms=int((time.time() - start_time) * 1000))
@@ -288,8 +294,12 @@ def supervisor_chat(user_input: str, session_id: Optional[str] = None) -> dict:
     }
 
 
-def format_answer(user_input: str, intent: IntentType, results: list) -> str:
-    """使用LLM生成自然语言回答（降级兼容模板回复）"""
+def format_answer(user_input: str, intent: IntentType, results: list, user_role: str = "user") -> str:
+    """使用LLM生成自然语言回答（降级兼容模板回复）
+
+    Args:
+        user_role: 用户角色 — expert/beginner/user，决定系统提示词风格
+    """
     if not results:
         return "抱歉，未能处理您的请求。"
 
@@ -306,7 +316,7 @@ def format_answer(user_input: str, intent: IntentType, results: list) -> str:
     raw_text = "\n\n".join(results_summary)
 
     # 构建提示词
-    system_prompt, user_prompt = _build_prompt(user_input, intent, results, raw_text)
+    system_prompt, user_prompt = _build_prompt(user_input, intent, results, raw_text, user_role=user_role)
 
     # 尝试调用LLM生成自然语言回答
     try:
@@ -333,9 +343,30 @@ def format_answer(user_input: str, intent: IntentType, results: list) -> str:
         return _fallback_answer(results, raw_text)
 
 
-def _build_prompt(user_input: str, intent: IntentType, results: list, raw_text: str) -> tuple[str, str]:
-    """构建LLM提示词"""
-    system_prompt = """你是专业焊接AI助手，负责将各Agent的查询结果转化为结构清晰的中文回答。
+def _build_prompt(user_input: str, intent: IntentType, results: list, raw_text: str, user_role: str = "user") -> tuple[str, str]:
+    """构建LLM提示词（支持基于用户角色的动态系统提示词）"""
+    base_prompt = "你是专业焊接AI助手，负责将各Agent的查询结果转化为结构清晰的中文回答。"
+
+    # === 动态系统提示词：根据用户角色调整回答风格 ===
+    if user_role == "expert":
+        role_prompt = (
+            f"{base_prompt} 提供详细的技术响应。"
+            "面向焊接工艺工程师/设备维护专家，可以使用专业术语（如MIG/MAG/TIG、占空比、熔敷速率、HAZ热影响区等），"
+            "引用具体参数范围、工艺规范和标准（如ISO 3834、AWS D1.1），给出可操作的技术方案与公式推导。"
+        )
+    elif user_role == "beginner":
+        role_prompt = (
+            f"{base_prompt} 简单地解释概念，避免行话。"
+            "面向焊接设备使用新手/新人，需把专业术语通俗化（如把'占空比'解释为'机器休息与工作的时间比例'），"
+            "多举生活中的例子，必要时配上分步骤的操作指引。"
+        )
+    else:  # 普通用户 "user"
+        role_prompt = (
+            f"{base_prompt} 提供清晰简洁的中文回答。"
+            "面向车间一线员工，兼顾专业性与可读性，关键术语在首次出现时用括号简要解释。"
+        )
+
+    system_prompt = f"""{role_prompt}
 
 格式要求（必须使用 Markdown）：
 1. 用自然语言总结数据，严禁直接输出原始JSON
@@ -374,18 +405,21 @@ def _fallback_answer(results: list, raw_text: str) -> str:
     return fallback_answer
 
 
-def supervisor_chat_stream(user_input: str, session_id: Optional[str] = None):
+def supervisor_chat_stream(user_input: str, session_id: Optional[str] = None, user_role: str = "user"):
     """主控Agent流式对话入口 — 逐token返回答案
-    
+
+    Args:
+        user_role: 用户角色 — expert/beginner/user，决定系统提示词风格
+
     Yields:
         {"event": "trace_step", "data": {...}}  — 轨迹步骤
         {"event": "answer_chunk", "data": "..."} — 答案片段(token级别)
         {"event": "done", "data": "[DONE]"}      — 流结束
     """
-    yield from _supervisor_chat_stream_impl(user_input, session_id)
+    yield from _supervisor_chat_stream_impl(user_input, session_id, user_role=user_role)
 
 
-def _supervisor_chat_stream_impl(user_input: str, session_id: Optional[str]):
+def _supervisor_chat_stream_impl(user_input: str, session_id: Optional[str], user_role: str = "user"):
     trace = create_trace(session_id)
     start_time = time.time()
 
@@ -441,7 +475,7 @@ def _supervisor_chat_stream_impl(user_input: str, session_id: Optional[str]):
             results_summary.append(f"[{agent}]:\n{format_data(data)}")
     raw_text = "\n\n".join(results_summary)
 
-    system_prompt, user_prompt = _build_prompt(user_input, intent, all_results, raw_text)
+    system_prompt, user_prompt = _build_prompt(user_input, intent, all_results, raw_text, user_role=user_role)
 
     # 尝试流式调用LLM
     try:

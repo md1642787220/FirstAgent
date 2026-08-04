@@ -4,6 +4,7 @@ WebSocket实时推送
 """
 import asyncio
 import json
+from datetime import datetime
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 router = APIRouter()
@@ -25,9 +26,25 @@ async def websocket_endpoint(ws: WebSocket):
             from src.simulators.welding_simulator import welding_simulator
             while True:
                 for dev in welding_simulator.DEVICES:
-                    if dev["status"] == "运行中":
-                        metrics = welding_simulator.get_device_metrics(dev["id"])
-                        await ws.send_json({"event": "metrics:update", "data": metrics})
+                    # 离线设备也推送状态（让前端显示离线），但不生成指标
+                    if dev["status"] == "offline":
+                        await ws.send_json({
+                            "type": "metrics:update",
+                            "device_id": dev["id"],
+                            "status": "offline",
+                            "metrics": None,
+                            "updated_at": datetime.now().isoformat(),
+                        })
+                    else:
+                        result = welding_simulator.get_device_metrics(dev["id"])
+                        await ws.send_json({
+                            "type": "metrics:update",
+                            "device_id": dev["id"],
+                            "status": result.get("status", "online"),
+                            "metrics": result.get("metrics", {}),
+                            "alerts": result.get("alerts", []),
+                            "updated_at": result.get("timestamp", datetime.now().isoformat()),
+                        })
                 await asyncio.sleep(2)
 
         task = asyncio.create_task(push_metrics())

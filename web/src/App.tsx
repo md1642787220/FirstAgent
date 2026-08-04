@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { useState, useCallback, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useState, useCallback, useEffect, type ReactNode } from 'react'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import AppLayout from './components/AppLayout'
 import ChatPage from './pages/ChatPage'
 import DevicePage from './pages/DevicePage'
@@ -10,12 +11,23 @@ import InventoryPage from './pages/InventoryPage'
 import TracePage from './pages/TracePage'
 import KnowledgePage from './pages/KnowledgePage'
 import TroubleShootPage from './pages/TroubleShootPage'
+import LoginPage from './pages/LoginPage'
 import api from './services/http'
 
 export interface AppState {
   llmConnected: boolean
   deviceOnline: number
   alertCount: number
+}
+
+// 路由守卫：未登录跳转到 /login，并记住来源地址
+function ProtectedRoute({ children }: { children: ReactNode }) {
+  const { isAuthenticated } = useAuth()
+  const location = useLocation()
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />
+  }
+  return <>{children}</>
 }
 
 export default function App() {
@@ -61,20 +73,32 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <ThemeProvider>
-        <AppLayout appState={state} updateAppState={updateState}>
+      <AuthProvider>
+        <ThemeProvider>
           <Routes>
-            <Route path="/" element={<ChatPage updateAppState={updateState} />} />
-            <Route path="/devices" element={<DevicePage updateAppState={updateState} />} />
-            <Route path="/production" element={<ProductionPage />} />
-            <Route path="/bom" element={<BOMPage />} />
-            <Route path="/inventory" element={<InventoryPage />} />
-            <Route path="/trace" element={<TracePage />} />
-            <Route path="/troubleshoot" element={<TroubleShootPage />} />
-            <Route path="/knowledge" element={<KnowledgePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <AppLayout appState={state} updateAppState={updateState}>
+                    <Routes>
+                      <Route path="/" element={<ChatPage updateAppState={updateState} />} />
+                      <Route path="/devices" element={<DevicePage updateAppState={updateState} />} />
+                      <Route path="/production" element={<ProductionPage />} />
+                      <Route path="/bom" element={<BOMPage />} />
+                      <Route path="/inventory" element={<InventoryPage />} />
+                      <Route path="/trace" element={<TracePage />} />
+                      <Route path="/troubleshoot" element={<TroubleShootPage />} />
+                      <Route path="/knowledge" element={<KnowledgePage />} />
+                    </Routes>
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
           </Routes>
-        </AppLayout>
-      </ThemeProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

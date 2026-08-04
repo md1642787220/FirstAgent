@@ -12,6 +12,12 @@ async def get_devices():
     return {"devices": welding_simulator.get_devices()}
 
 
+@router.post("/refresh")
+async def refresh_devices():
+    """刷新设备状态：重新探测设备在线/离线情况"""
+    return {"devices": welding_simulator.refresh_devices()}
+
+
 @router.get("/{device_id}/metrics")
 async def get_device_metrics(device_id: str):
     """获取设备实时参数"""

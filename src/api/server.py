@@ -25,6 +25,14 @@ async def lifespan(app: FastAPI):
     print("[Startup] 初始化数据库与模拟数据...")
     init_all_data()
 
+    # 初始化故障库（表为空时灌入初始数据）
+    print("[Startup] 初始化故障库...")
+    try:
+        from src.api.routes.faults import seed_faults_if_empty
+        seed_faults_if_empty()
+    except Exception as e:
+        print(f"[Startup] 故障库初始化异常: {e}")
+
     # 初始化RAG知识库（失败不阻塞服务启动）
     print("[Startup] 初始化RAG知识库...")
     try:
@@ -57,8 +65,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from src.api.routes import chat, devices, production, bom, inventory, trace, knowledge
+from src.api.routes import chat, devices, production, bom, inventory, trace, knowledge, auth, faults
 
+app.include_router(auth.router, prefix="/api", tags=["认证"])
 app.include_router(chat.router, prefix="/api", tags=["对话"])
 app.include_router(devices.router, prefix="/api/devices", tags=["设备监控"])
 app.include_router(production.router, prefix="/api/production", tags=["生产进度"])
@@ -66,6 +75,7 @@ app.include_router(bom.router, prefix="/api/bom", tags=["BOM管理"])
 app.include_router(inventory.router, prefix="/api/inventory", tags=["库存分析"])
 app.include_router(trace.router, prefix="/api/sessions", tags=["执行轨迹"])
 app.include_router(knowledge.router, tags=["知识库管理"])  # 前缀已在路由文件中定义为 /api/knowledge
+app.include_router(faults.router, prefix="/api/faults", tags=["故障库"])
 
 from src.api.websocket import router as ws_router
 app.include_router(ws_router, prefix="/ws", tags=["WebSocket"])
