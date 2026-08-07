@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>焊接成形预测详细工作计划与甘特图</title>
+  <style>
+    :root{--ink:#172329;--muted:#526169;--line:#cbd4d8;--bg:#eef2f3;--paper:#fff;--teal:#16726f;--blue:#246b9e;--trial:#d66c2f;--measure:#2580a6;--data:#17856f;--model:#76559a;--qt:#235b84;--review:#b78318;--buffer:#7f8b91;--danger:#a33b35}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 "Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;letter-spacing:0}main{width:min(1540px,calc(100% - 28px));margin:22px auto 42px;background:var(--paper);padding:34px 42px;box-shadow:0 8px 26px #15252c18}h1{margin:0 0 8px;color:#114f57;font-size:30px;line-height:1.25}h2{font-size:22px;margin:34px 0 13px;padding-bottom:6px;border-bottom:2px solid var(--teal)}h3{font-size:17px;margin:23px 0 8px;color:#24545a}p{margin:8px 0}.lead{font-size:17px;color:var(--muted);max-width:1100px}.meta{font-size:12px;color:var(--muted)}a{color:#12628e}.notice,.warning{margin:12px 0;padding:12px 15px;border-left:4px solid var(--teal);background:#edf7f6}.warning{background:#fff5e6;border-left-color:#bd7415}.scope{display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:8px;margin:16px 0}.scope div{border:1px solid var(--line);padding:10px;background:#f8fafb}.scope strong{display:block;color:#175961}.summary{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:9px;margin:14px 0}.summary div{border-top:4px solid var(--teal);background:#f6f9f9;padding:11px}.summary b{font-size:19px;display:block;color:#174d54}.summary span{color:var(--muted);font-size:12px}.table-wrap,.gantt-wrap{overflow-x:auto;max-width:100%;border:1px solid var(--line);background:#fff}.table-wrap table{margin:0}table{border-collapse:collapse;width:100%;margin:10px 0 18px}th,td{border:1px solid var(--line);padding:7px 8px;vertical-align:top;text-align:left}th{background:#e8f0f1;color:#173e43}.wide{min-width:2280px;font-size:12px;line-height:1.45}.wide th:nth-child(1){width:72px}.wide th:nth-child(2){width:185px}.wide th:nth-child(3){width:285px}.wide th:nth-child(4){width:105px}.wide th:nth-child(5){width:190px}.wide th:nth-child(6){width:60px}.wide th:nth-child(7){width:150px}.wide th:nth-child(8),.wide th:nth-child(9){width:180px}.wide th:nth-child(10){width:240px}.wide th:nth-child(11),.wide th:nth-child(12){width:160px}.wide th:nth-child(13){width:110px}.tag{display:inline-block;padding:1px 5px;border-radius:3px;color:#fff;font-size:11px;white-space:nowrap}.reuse{background:#4c7b58}.modify{background:#9b6b1b}.new{background:#76559a}.gate{color:#76540d;font-weight:700}.critical{color:var(--danger);font-weight:700}.roles{display:grid;grid-template-columns:repeat(3,minmax(240px,1fr));gap:10px}.role{border:1px solid var(--line);padding:11px;background:#fafcfc}.role b{color:#18575d}.legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:9px 0}.legend span{display:inline-flex;align-items:center;gap:6px}.swatch{width:18px;height:10px;display:inline-block}.trial{background:var(--trial)}.measure{background:var(--measure)}.data{background:var(--data)}.model{background:var(--model)}.qt{background:var(--qt)}.review{background:var(--review)}.buffer{background:repeating-linear-gradient(135deg,#7f8b91 0,#7f8b91 5px,#b8c0c4 5px,#b8c0c4 10px)}.gantt{min-width:1472px}.g-head,.g-row{display:grid;grid-template-columns:320px 1152px}.g-head{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid #819096}.g-head-title{padding:8px 10px;font-weight:700;background:#e8f0f1}.weeks{display:grid;grid-template-columns:repeat(24,48px)}.week{font-size:10px;text-align:center;padding:5px 0;border-left:1px solid #cbd4d8;background:#e8f0f1}.week small{display:block;color:#5d6a70;font-size:8px;line-height:1.2}.g-row{min-height:56px;border-bottom:1px solid #e0e5e7}.g-label{position:sticky;left:0;z-index:3;padding:5px 9px;background:#fff;border-right:1px solid #9da8ad;line-height:1.35}.g-label b{display:block;font-size:12px}.g-label small{display:block;color:var(--muted);font-size:10px}.g-label .g-role{color:#315963}.track{position:relative;width:1152px;min-height:56px;background:repeating-linear-gradient(90deg,#fff 0,#fff 47px,#d8dfe1 47px,#d8dfe1 48px)}.bar{position:absolute;left:calc((var(--s) - 1) * 48px + 2px);width:calc(var(--d) * 48px - 4px);top:14px;height:27px;border-radius:3px;color:#fff;font-size:10px;line-height:27px;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 2px #0002}.bar.crit{outline:2px solid #842f2b;outline-offset:-2px}.bar.buffer{color:#172329}.milestone{position:absolute;left:calc((var(--s) - .5) * 48px - 8px);top:17px;width:18px;height:18px;background:var(--review);transform:rotate(45deg);border:2px solid #704c08;z-index:4}.milestone-label{position:absolute;left:calc((var(--s) - 1) * 48px + 23px);top:12px;font-size:10px;font-weight:700;color:#68490d;white-space:nowrap;z-index:4}.dep{font-family:Consolas,monospace;color:#59666c}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}code{font-family:Consolas,monospace;background:#edf1f2;padding:1px 4px;border-radius:3px}.foot{margin-top:28px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+    @media(max-width:900px){main{width:100%;margin:0;padding:22px 14px;box-shadow:none}.scope,.summary,.roles,.two-col{grid-template-columns:1fr}.lead{font-size:15px}h1{font-size:25px}.table-wrap,.gantt-wrap{border-left:0;border-right:0}.g-label{position:static}.g-head{position:static}}
+    @media print{@page{size:A3 landscape;margin:9mm}body{background:#fff;font-size:10px}main{width:100%;margin:0;padding:0;box-shadow:none}nav{display:none}.table-wrap,.gantt-wrap{overflow:visible;border:0}.wide{font-size:7px;min-width:100%}.wide th,.wide td{padding:3px 4px}.gantt{transform:scale(.84);transform-origin:top left;width:119.1%;}.g-head,.g-row{grid-template-columns:300px 1152px}.g-label{position:static}.scope,.summary{break-inside:avoid}h2{break-after:avoid}.page-break{break-before:page}}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="meta">计划基线：2026-08-06 · 权威周号：W1～W24 · 本次仅编制计划和文档</p>
+    <h1>焊接成形预测详细工作计划与甘特图</h1>
+    <p class="lead">在现有首版实施计划上细化 Task 0～Task 8，覆盖三级 WBS、角色和资源约束、关键路径、放行门、管理缓冲、外部等待以及 W1～W24 完整甘特排期。</p>
+    <div class="scope">
+      <div><strong>工艺范围</strong>PA/1G · 脉冲 MIG/MAG</div><div><strong>接头范围</strong>V 型坡口 · 固定 20 mm</div><div><strong>执行范围</strong>自动焊接平台 · 打底焊道</div><div><strong>排期规则</strong>W1=2026-08-10；周一至周五</div>
+    </div>
+    <div class="warning"><strong>未冻结说明：</strong>排期可按约 72 个试件、每件 N=5 个位置做 sizing，但不得写成已冻结 DOE、重复数或 N。日期映射暂不扣除中国法定节假日；W1～W24 周号为当前权威排期。</div>
+    <nav><a href="file:///R:/Users/md20240011/AppData/Local/Microsoft/Windows/INetCache/IE/J3YYW2PL/welding-forming-prediction-implementation-plan.html">原实施计划</a> · <a href="file:///R:/Users/md20240011/AppData/Local/Microsoft/Windows/INetCache/IE/J3YYW2PL/welding-forming-prediction-model-details.html">模型详细说明</a> · <a href="file:///R:/Users/md20240011/AppData/Local/Microsoft/Windows/INetCache/IE/docs/superpowers/plans/2026-08-06-welding-forming-prediction-implementation-plan.md">原 Markdown 计划</a> · <a href="file:///R:/Users/md20240011/AppData/Local/Microsoft/Windows/INetCache/IE/docs/superpowers/plans/2026-08-06-welding-forming-prediction-detailed-work-plan.md">本详细计划 Markdown</a></nav>
+  </header>
+
+  <h2>1. 工期摘要</h2>
+  <div class="summary"><div><b>14～18 周</b><span>数据与模型首版</span></div><div><b>18～24 周</b><span>含 Qt 与总验收</span></div><div><b>24～32 周</b><span>单人全流程情景</span></div><div><b>8～12 周</b><span>正式数据采集</span></div><div><b>+6～10 周</b><span>外协/校准/排队风险</span></div></div>
+  <p><span class="critical">关键路径：</span>阶段 0 冻结 → 设备/同步/SOP 放行 → 预试验与 MSA → 正式试验及金相 → 数据完整性 → 双模型冻结 → 独立盲测 → 两个模型包。Qt 尾链为模型包契约冻结 → Qt 离线推理 → 总验收。</p>
+  <div class="notice"><strong>并行计算结论：</strong>T3 正式采集与 T4 增量导入/质检并行，T3 后半段允许 T5 用已放行开发数据调通管线，Qt 只在模型包契约冻结后进入正式集成；因此总工期由放行门和关键路径决定，不是所有任务最大工期的简单相加。</div>
+
+  <h2>2. training/ 现状与工作边界</h2>
+  <div class="two-col"><div><h3>已完成：合成数据闭环</h3><p>已有数据契约、导入、质量校验、分组、防泄漏、候选模型、区间、适用性和模型包流程，以及合成 CSV、评估 JSON 和 package 产物。它们只证明流程可运行，不是正式数据、真实精度或发布验收。</p></div><div><h3>仍需实施：真实数据链路</h3><p>设备校准、坐标/同步、测量 SOP/MSA、正式试验、轮廓和过程采集、N 位置金相、真实适配器、完整性门、双模型正式评估、模型冻结、盲测、Qt 集成和总验收均未完成。</p></div></div>
+  <table><thead><tr><th>处置</th><th>training/ 项目</th><th>计划动作</th></tr></thead><tbody>
+    <tr><td><span class="tag reuse">复用</span></td><td>schemas、ingestion 基础、quality、features、splitting、modeling、uncertainty、applicability、packaging 和现有测试框架</td><td>保留合成闭环和审计能力，作为真实链路的软件基线。</td></tr>
+    <tr><td><span class="tag modify">修改</span></td><td>旧的 10 mm、三位置/双模式契约；导入/关系/白名单/分组/模型包/README</td><td>收敛到 20 mm、PA/1G、脉冲；增加时间→位置、主/内部双白名单和两个独立包。</td></tr>
+    <tr><td><span class="tag new">新增</span></td><td>SOP、校准/MSA、真实适配器、两套 pipeline、生产/盲测 manifest、真实 CLI、Qt 契约、黄金样本和发布报告</td><td>正式原始二进制数据存代码树外，manifest 保存 URI、哈希、设备、版本和质量状态。</td></tr>
+  </tbody></table>
+  <h3>关键缺口和冲突矩阵</h3>
+  <div class="table-wrap"><table><thead><tr><th>本次权威要求</th><th>training/ 当前状态</th><th>计划处理</th></tr></thead><tbody>
+    <tr><td>固定 20 mm</td><td>常量、测试、合成 CSV 和模型包仍为旧 10 mm。</td><td>T0/T4 建立新契约版本，旧 10 mm 只作为域外或旧基线反例。</td></tr>
+    <tr><td>PA/1G only</td><td>当前允许 PA/1G、PC/2G、PF/3G，并按六层报告。</td><td>T0/T5 改为 PA-only，改用批次、日期、材料批号等防批次泄漏分层。</td></tr>
+    <tr><td>脉冲 MIG/MAG only</td><td>conventional 与 pulse 当前都是有效模式。</td><td>T0/T4 改为 pulse-only；conventional 只保留为越界拒绝测试。</td></tr>
+    <tr><td>主模型输入含焊中实际过程数据</td><td>当前白名单把 actual 电压/电流/送丝/速度均值硬拒为泄漏。</td><td>T0/T4/T5 按可知时点、来源、同步和窗口规则重新允许焊中实际过程；仍禁止焊后表面、金相和派生标签。</td></tr>
+    <tr><td>焊前坡口轮廓</td><td>当前主要是坡口角度、间隙、钝边等标量。</td><td>T1/T4 增加带坐标、基准面、扫描质量和派生版本的轮廓数据契约。</td></tr>
+    <tr><td>焊后表面轮廓 + N 个截面金相</td><td>当前只有六个标量几何目标。</td><td>T5 将六标量降为派生/辅助指标，新增结构化轮廓、截面几何/金相标签和对应评价口径。</td></tr>
+    <tr><td>两类模型独立训练、评估、打包</td><td><code>package.py</code> 只生成一套六目标包。</td><td>T6 输出 primary 与 optional-internal 两个独立模型包、清单、评估和发布状态。</td></tr>
+    <tr><td>盲测真实评估</td><td><code>cli evaluate</code> 主要复制候选包内指标；合成包为 diagnostic 状态。</td><td>T6 改为基于独立输入数据的真实评估入口，盲测冻结后一次性解封。</td></tr>
+    <tr><td>Qt 可推理权重</td><td>树模型候选包未形成可供 Qt 直接推理的权重交接。</td><td>T6/T7 冻结可部署格式，并用黄金样本做 Python/Qt 容差验证。</td></tr>
+    <tr><td>多模态测量关系与完整性清单</td><td>位置 ID 唯一性与“一位置多测量记录”存在冲突；盲测 acceptance 后哈希策略需重新定义。</td><td>T4 调整位置级/测量级唯一性；T6 定义解封后清单更新或签名策略。</td></tr>
+  </tbody></table></div>
+
+  <h2>3. 角色职责</h2>
+  <div class="roles">
+    <div class="role"><b>项目负责人</b><br>范围、资源、DOE sizing、G0～G7 评审组织、变更控制和总验收。</div>
+    <div class="role"><b>焊接工艺/试验</b><br>工艺安全窗口、试件/装配、焊接执行、预试验和正式试验可执行性。</div>
+    <div class="role"><b>数据与测量</b><br>设备校准、坐标/同步、轮廓和金相 SOP/MSA、manifest、数据完整性。</div>
+    <div class="role"><b>算法工程师</b><br>契约、真实适配器、分组、防泄漏、两类模型、区间、训练域和模型包。</div>
+    <div class="role"><b>Qt 工程师</b><br>Qt 5.14.2 离线加载、契约预检、推理展示、黄金样本和部署验证。</div>
+    <div class="role"><b>质量/评审人员</b><br>独立检查数据、盲测封存、模型冻结、发布门、证据和归档一致性。</div>
+  </div>
+
+  <h2 class="page-break">4. 详细三级 WBS</h2>
+  <p>表中每个可执行子任务为 1～5 个工作日；批次/每周任务表示一次执行粒度，整体历时由甘特图控制。</p>
+  <div class="table-wrap"><table class="wide"><thead><tr><th>WBS</th><th>任务名称</th><th>工作内容</th><th>负责人</th><th>参与角色</th><th>工期</th><th>前置依赖</th><th>输入</th><th>输出</th><th>验收条件</th><th>风险</th><th>缓冲</th><th>资产</th></tr></thead><tbody>
+    <tr><td>0.1.1</td><td>范围与排除项确认</td><td>把项目要做和不做的范围写清楚，并确认所有人理解一致。</td><td>项目负责人</td><td>工艺、算法、质量</td><td>2d</td><td>—</td><td>模型说明/评审基线</td><td>范围清单</td><td>范围逐条签字，域外规则明确</td><td>旧范围残留</td><td>1d</td><td><span class="tag modify">修改</span></td></tr>
+    <tr><td>0.1.2</td><td>材料/焊材/设备基线</td><td>把材料、焊丝、气体、焊机、机器人、轮廓仪和金相设备逐项登记，并记录版本和证书。</td><td>焊接工艺/试验</td><td>数据、项目、质量</td><td>3d</td><td>0.1.1</td><td>清单/证书/程序</td><td>基线登记</td><td>均有责任人、版本、哈希或待决状态</td><td>证书缺失/外协未锁定</td><td>1d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>0.1.3</td><td>DOE 与 N sizing</td><td>先列出要试哪些参数组合、做多少重复和看哪些位置；72 件和 N=5 只作估算，不在这里定死。</td><td>焊接工艺/试验</td><td>算法、数据、质量</td><td>3d</td><td>0.1.1</td><td>历史计划/节拍</td><td>DOE 候选表</td><td>未决项有证据需求和冻结门</td><td>sizing 被误当 DOE</td><td>1d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>0.1.4</td><td>双模型白名单草案</td><td>分别写清两个模型可以用什么数据、要预测什么，以及哪些焊后数据绝不能给主模型使用。</td><td>算法工程师</td><td>数据、Qt、质量</td><td>3d</td><td>0.1.1</td><td>模型说明/现有白名单</td><td>契约草案</td><td>主模型负向用例覆盖焊后/金相</td><td>契约漂移</td><td>1d</td><td><span class="tag modify">修改</span></td></tr>
+    <tr><td>0.1.5</td><td>阶段 0 评审签署</td><td>把前面定下的内容汇总成清单，交给项目成员评审并留下签字记录。</td><td>项目负责人</td><td>全角色</td><td>2d</td><td>0.1.2～0.1.4</td><td>决策包</td><td><span class="gate">G0</span></td><td>未签署不得进入正式 DOE</td><td>评审延期</td><td>1d</td><td><span class="tag new">新增门</span></td></tr>
+    <tr><td>1.1.1</td><td>设备校准盘点</td><td>逐台检查设备能否使用、校准是否有效、什么时候需要复校，以及设备由谁负责。</td><td>数据与测量</td><td>工艺、质量</td><td>2d</td><td>0.1.2</td><td>基线/证书</td><td>校准矩阵</td><td>每台设备有状态、责任人、复校日期</td><td>校准排队</td><td>2d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>1.1.2</td><td>坐标与位置基准</td><td>统一坐标原点、方向、焊缝长度、位置零点和切片标记，避免不同设备各用一套位置。</td><td>数据与测量</td><td>工艺、算法</td><td>3d</td><td>1.1.1</td><td>设备接口/模型说明</td><td>坐标 SOP</td><td>四类位置可在同一基准重建</td><td>方向不一致</td><td>1d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>1.1.3</td><td>时间→位置同步</td><td>规定怎样把设备记录的时间换算成焊缝上的位置，并规定起弧、稳定段、收弧和缺数据时怎么处理。</td><td>数据与测量</td><td>算法、工艺</td><td>4d</td><td>1.1.2</td><td>过程/编码器日志</td><td>同步 SOP/配置</td><td>基准位置误差在批准阈值内</td><td>时钟漂移/丢包</td><td>2d</td><td><span class="tag modify">修改</span></td></tr>
+    <tr><td>1.1.4</td><td>轮廓与金相 SOP</td><td>写清楚焊前和焊后轮廓怎么扫描、金相怎么切片和拍照、结果怎么标注和复核。</td><td>数据与测量</td><td>工艺、质量</td><td>4d</td><td>1.1.1</td><td>输出字典/设备能力</td><td>测量 SOP</td><td>均有复测、MSA 和追溯要求</td><td>标注差异</td><td>2d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>1.1.5</td><td>MSA/同步基准件</td><td>用标准件重复扫描和重复标注，确认测量结果稳定、位置能对上、数据窗口没有缺口。</td><td>数据与测量</td><td>质量、工艺、算法</td><td>4d</td><td>1.1.3～1.1.4</td><td>基准件/SOP</td><td>MSA/同步报告</td><td>未达标设备隔离；G1 放行</td><td>基准件不可用</td><td>2d</td><td><span class="tag new">新增门</span></td></tr>
+    <tr><td>2.1.1</td><td>预试验清单</td><td>把候选参数整理成一张预试验清单，写明每个试件做什么、测哪些位置以及失败怎么编号。</td><td>焊接工艺/试验</td><td>项目、数据、质量</td><td>3d</td><td>G0/G1</td><td>DOE 候选/SOP</td><td>pilot manifest</td><td>组合、重复、位置均可追溯</td><td>组合不可焊</td><td>1d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>2.1.2</td><td>预试验执行</td><td>按清单做预试验，观察电弧是否稳定、数据是否采全、轮廓能否测量、金相能否制作。</td><td>焊接工艺/试验</td><td>数据、质量</td><td>5d</td><td>2.1.1</td><td>试件/程序/设备</td><td>原始记录</td><td>失败原因可分类，原始文件齐全</td><td>不稳定/停机</td><td>2d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>2.1.3</td><td>DOE/N/备用量复核</td><td>根据预试验和测量结果，调整参数范围、位置数量、备用试件和需要补采的条件，并记录修改原因。</td><td>项目负责人</td><td>工艺、数据、算法、质量</td><td>3d</td><td>2.1.2</td><td>pilot/MSA</td><td>冻结建议/变更记录</td><td>状态为批准或继续验证</td><td>样本量争议</td><td>1d</td><td><span class="tag modify">修改</span></td></tr>
+    <tr><td>2.1.4</td><td>盲测清单封存</td><td>把用于最后检查的试件名单封存起来，训练和调参期间不能查看它们的结果。</td><td>质量/评审</td><td>数据、算法、项目</td><td>2d</td><td>2.1.3</td><td>DOE/ID 规则</td><td>盲测封存记录</td><td>候选冻结前不可读取标签/统计</td><td>误解封</td><td>1d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>2.1.5</td><td>正式采集放行</td><td>开会确认设备、试件、人员、清单和数据记录都已准备好，确认后才能开始正式采集。</td><td>项目负责人</td><td>全角色</td><td>2d</td><td>2.1.2～2.1.4</td><td>预试验包</td><td><span class="gate">G2</span></td><td>签署后才进入正式采集</td><td>评审冲突</td><td>1d</td><td><span class="tag new">新增门</span></td></tr>
+    <tr><td>3.1.1</td><td>试件制备/追溯</td><td>按批准的清单加工、装配和编号试件，记录实际板厚、坡口尺寸、间隙、钝边、错边和批次。</td><td>焊接工艺/试验</td><td>数据、质量</td><td>3d/批</td><td>G2</td><td>生产清单/SOP</td><td>试件记录</td><td>主键/父键完整，偏差显式</td><td>返工</td><td>1d/批</td><td><span class="tag new">真实工作</span></td></tr>
+    <tr><td>3.1.2</td><td>焊前轮廓采集</td><td>焊接前扫描坡口，保存原始文件，并检查扫描范围、清晰度和文件完整性。</td><td>数据与测量</td><td>工艺、质量</td><td>2d/批</td><td>3.1.1</td><td>试件/轮廓 SOP</td><td>pre-profile</td><td>哈希、覆盖和复核通过</td><td>设备排队</td><td>1d/批</td><td><span class="tag new">真实工作</span></td></tr>
+    <tr><td>3.1.3</td><td>焊中实际过程采集</td><td>焊接过程中保存电流、电压、送丝、行走速度、脉冲反馈以及机器人和编码器的原始记录。</td><td>焊接工艺/试验</td><td>数据</td><td>2d/批</td><td>3.1.1</td><td>配置/试件</td><td>process raw</td><td>时间戳、版本、起收弧齐全</td><td>通道丢失</td><td>1d/批</td><td><span class="tag new">真实工作</span></td></tr>
+    <tr><td>3.1.4</td><td>焊后表面轮廓</td><td>焊接完成后扫描焊缝表面，保存原始轮廓，并把它和对应试件、焊道及位置对上。</td><td>数据与测量</td><td>工艺、质量</td><td>2d/批</td><td>3.1.3</td><td>焊后试件/SOP</td><td>post-profile</td><td>主模型只作标签；内部模型字段独立</td><td>污染/扫描失败</td><td>1d/批</td><td><span class="tag new">真实工作</span></td></tr>
+    <tr><td>3.1.5</td><td>N 位置金相</td><td>在计划位置切片、制作金相、拍照、标注结果并复核，同时记录实际切片位置和偏差。</td><td>焊接工艺/试验</td><td>数据、质量、外协</td><td>4d/批</td><td>3.1.3</td><td>位置计划/SOP</td><td>metallography</td><td>每位置有原图、标注、复核和 ID</td><td>排队/返工</td><td>3d/批</td><td><span class="tag new">真实工作</span></td></tr>
+    <tr><td>3.1.6</td><td>周完整性审计/补采</td><td>每周检查试件、焊道、位置和四类测量是否齐全，发现缺失就安排补采或隔离，不能用默认值代替。</td><td>质量/评审</td><td>项目、数据、工艺、算法</td><td>2d/周</td><td>3.1.2～3.1.5</td><td>manifest/质量状态</td><td>周报/补采清单</td><td>缺失不默认填补</td><td>返工吞噬节拍</td><td>W16+2周</td><td><span class="tag new">真实工作</span></td></tr>
+    <tr><td>4.1.1</td><td>真实数据适配器</td><td>先用一小批脱敏文件试跑导入，确认轮廓、过程、金相和试件信息都能正确读取。</td><td>数据与测量</td><td>算法、质量</td><td>4d</td><td>T1+首批样例</td><td>脱敏样例/importer</td><td>real adapters</td><td>脱敏样例端到端通过</td><td>格式差异</td><td>2d</td><td><span class="tag modify">修改+新增</span></td></tr>
+    <tr><td>4.1.2</td><td>单位/固定条件校验</td><td>把不同设备输出的单位统一起来，并检查板厚、位置、工艺模式等固定条件是否正确。</td><td>算法工程师</td><td>数据、工艺、质量</td><td>3d</td><td>4.1.1</td><td>contract/固定条件</td><td>质量结果</td><td>非法值有原因码</td><td>旧契约误报</td><td>1d</td><td><span class="tag modify">修改</span></td></tr>
+    <tr><td>4.1.3</td><td>关联/同步/窗口</td><td>按试件、焊道和位置把焊前轮廓、焊中过程、焊后轮廓和金相记录一一对应起来。</td><td>算法工程师</td><td>数据、工艺</td><td>5d</td><td>1.1.3/4.1.1</td><td>raw/同步配置</td><td>位置级数据集</td><td>黄金样本重建可重复</td><td>漂移/截断</td><td>2d</td><td><span class="tag modify">修改</span></td></tr>
+    <tr><td>4.1.4</td><td>manifest/质量报告</td><td>生成带数据版本、文件哈希、缺失原因和质量状态的数据清单，让别人可以按清单重建数据集。</td><td>数据与测量</td><td>算法、质量</td><td>3d</td><td>4.1.2～4.1.3</td><td>清洗/关联结果</td><td>manifest/report</td><td>可复现且盲测隔离</td><td>哈希漏记</td><td>1d</td><td><span class="tag modify">修改</span></td></tr>
+    <tr><td>4.1.5</td><td>数据完整性放行</td><td>由质量人员检查数据关系、文件、同步、测量质量和盲测隔离状态，确认哪些记录可以进入训练。</td><td>质量/评审</td><td>项目、数据、算法</td><td>2d</td><td>4.1.4/T3收口</td><td>版本化数据包</td><td><span class="gate">G3</span></td><td>开发集可生成，盲测仍封存</td><td>审计返工</td><td>2d</td><td><span class="tag new">新增门</span></td></tr>
+    <tr><td>5.1.1</td><td>试件级分组</td><td>按试件分组切分训练、验证、测试和盲测数据，同一试件的所有位置必须留在同一组。</td><td>算法工程师</td><td>数据、质量</td><td>3d</td><td>T4 首批合格增量数据</td><td>manifest/规则</td><td>split manifest</td><td>任意集合 ID 交集为零；G3 前仅调通管线</td><td>位置当独立样本</td><td>1d</td><td><span class="tag modify">修改</span></td></tr>
+    <tr><td>5.1.2</td><td>主模型管线</td><td>搭建主模型流程：用焊前坡口轮廓和焊中实际过程数据预测焊后表面轮廓和截面金相，并逐项检查没有混入焊后数据。</td><td>算法工程师</td><td>数据、质量</td><td>5d</td><td>5.1.1</td><td>主白名单/数据</td><td>primary pipeline</td><td>泄漏负向测试通过</td><td>派生泄漏</td><td>2d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>5.1.3</td><td>可选内部模型管线</td><td>单独搭建可选内部模型流程：在主模型数据之外加入已测焊后表面轮廓，只预测截面金相。</td><td>算法工程师</td><td>数据、Qt、质量</td><td>5d</td><td>5.1.1</td><td>内部白名单/数据</td><td>internal pipeline</td><td>契约与主模型隔离</td><td>运行时混用</td><td>2d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>5.1.4</td><td>逐目标候选评估</td><td>针对每个预测目标比较候选算法，分别记录试件数量、位置数量、误差和不同工况下的表现。</td><td>算法工程师</td><td>质量、工艺</td><td>4d</td><td>5.1.2～5.1.3</td><td>开发集/配置</td><td>两套评估报告</td><td>不可用候选不填虚构指标</td><td>小样本不稳</td><td>2d</td><td><span class="tag modify">修改</span></td></tr>
+    <tr><td>5.1.5</td><td>90% 区间/训练域</td><td>用开发数据的折外预测结果估计 90% 预测区间，并标出数据充足、边缘、域外和禁止预测的情况。</td><td>算法工程师</td><td>质量、工艺</td><td>4d</td><td>5.1.4 + G3</td><td>OOF/域规则</td><td>校准/适用性报告</td><td>只对冻结开发数据形成正式结论；盲测未参与选择</td><td>覆盖不足</td><td>2d</td><td><span class="tag modify">修改</span></td></tr>
+    <tr><td>5.1.6</td><td>模型冻结评审</td><td>评审并锁定两个模型的输入、预处理、算法、区间、适用范围和发布规则，之后才能打开盲测。</td><td>项目负责人</td><td>算法、数据、Qt、质量</td><td>2d</td><td>5.1.5</td><td>两模型报告</td><td><span class="gate">G4</span></td><td>变化需新版本和新盲测</td><td>意见未闭环</td><td>1d</td><td><span class="tag new">新增门</span></td></tr>
+    <tr><td>6.1.1</td><td>盲测解封/推理</td><td>模型锁定后打开盲测清单，分别运行主模型和可选内部模型，不用盲测结果回头改参数。</td><td>质量/评审</td><td>算法、数据、项目</td><td>3d</td><td>G4</td><td>盲测/冻结候选</td><td>blind report</td><td>标签未提前使用</td><td>误解封</td><td>1d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>6.1.2</td><td>两个独立模型包</td><td>分别制作主模型包和可选内部模型包，写入数据版本、输入说明、处理步骤、模型文件、区间、适用范围和文件校验值。</td><td>算法工程师</td><td>数据、Qt、质量</td><td>4d</td><td>G4；与 6.1.1 并行</td><td>冻结产物</td><td>两模型候选包</td><td>独立加载、不可原地覆盖；盲测前不标 released</td><td>清单不全</td><td>2d</td><td><span class="tag modify">修改</span></td></tr>
+    <tr><td>6.1.3</td><td>坏包/域外测试</td><td>故意使用缺文件、被改过、字段缺失、类型错误和超出范围的模型包，确认系统会拒绝并给出原因。</td><td>质量/评审</td><td>算法、Qt</td><td>3d</td><td>6.1.2</td><td>模型包/反例</td><td>QA report</td><td>反例均阻止推理</td><td>漏测边界</td><td>1d</td><td><span class="tag modify">修改</span></td></tr>
+    <tr><td>6.1.4</td><td>复现/发布评审</td><td>让另一名人员按记录重新加载模型包并重做报告，确认结果能复现，再决定包是候选还是正式发布。</td><td>项目负责人</td><td>全角色</td><td>3d</td><td>6.1.2～6.1.3</td><td>复现/盲测报告</td><td><span class="gate">G5</span></td><td>两包状态独立，失败目标不 validated</td><td>环境缺失</td><td>1d</td><td><span class="tag new">新增门</span></td></tr>
+    <tr><td>7.1.1</td><td>Qt 工程/部署矩阵</td><td>确认 Qt 工程位置、Qt 5.14.2、编译器、运行环境、安装方式和目标 Windows 环境。</td><td>Qt 工程师</td><td>项目、算法、质量</td><td>3d</td><td>G4契约</td><td>模型包/现场环境</td><td>Qt 契约</td><td>工程路径/依赖签字</td><td>工程未提供</td><td>2d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>7.1.2</td><td>加载与契约预检</td><td>Qt 加载模型前检查模型类型、版本、文件校验值、输入字段、单位、固定范围和数据是否完整。</td><td>Qt 工程师</td><td>算法、质量</td><td>5d</td><td>7.1.1</td><td>两包/契约</td><td>loader/preflight</td><td>主入口拒焊后字段；内部入口要求批准字段</td><td>契约漂移</td><td>2d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>7.1.3</td><td>结果与状态展示</td><td>在界面中显示预测值、预测区间、数据适用状态和原因；明显超范围或非法输入不显示可信数值。</td><td>Qt 工程师</td><td>算法、质量、工艺</td><td>4d</td><td>7.1.2</td><td>状态规则/UI</td><td>离线界面/报告</td><td>状态与包内规则一致</td><td>误导展示</td><td>1d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>7.1.4</td><td>黄金样本/坏包测试</td><td>用同一批黄金样本比较 Python 和 Qt 的结果，并测试坏包、域外输入、版本不兼容和安装目录隔离。</td><td>Qt 工程师</td><td>算法、质量</td><td>5d</td><td>7.1.2～7.1.3</td><td>fixtures/模型包</td><td>跨端报告</td><td>容差内一致，不依赖训练源代码</td><td>数值差异</td><td>2d</td><td><span class="tag new">新增</span></td></tr>
+    <tr><td>7.1.5</td><td>Qt 放行</td><td>由评审人员检查 Qt 能否离线加载、报错是否清楚、日志是否完整、部署后是否还能复现。</td><td>质量/评审</td><td>Qt、项目、算法</td><td>2d</td><td>7.1.4</td><td>Qt 测试报告</td><td><span class="gate">G6</span></td><td>通过后进入总验收</td><td>环境等待</td><td>1d</td><td><span class="tag new">新增门</span></td></tr>
+    <tr><td>8.1.1</td><td>端到端复现演练</td><td>从受控原始数据和清单开始，完整重跑导入、训练、评估、打包和报告生成流程。</td><td>算法工程师</td><td>数据、质量、Qt</td><td>3d</td><td>G5/G6</td><td>数据/包/配置</td><td>复现记录</td><td>关键 hash/版本一致</td><td>环境差异</td><td>1d</td><td><span class="tag reuse">复用+核验</span></td></tr>
+    <tr><td>8.1.2</td><td>范围/未发布项核对</td><td>逐项核对哪些内容已经发布、哪些只有合成验证、哪些只完成采集，以及哪些事项留到阶段 2。</td><td>项目负责人</td><td>全角色、质量</td><td>2d</td><td>8.1.1</td><td>报告/范围</td><td>验收清单</td><td>不扩大首版范围</td><td>口头扩范围</td><td>1d</td><td><span class="tag modify">修改</span></td></tr>
+    <tr><td>8.1.3</td><td>总验收与归档</td><td>汇总试件数量、数据完整率、测量质量、模型结果、盲测结果、模型包和文档版本，形成最终验收记录。</td><td>项目负责人</td><td>全角色、质量</td><td>3d</td><td>8.1.2</td><td>验收包</td><td><span class="gate">G7</span></td><td>签字并形成阶段 2 入口</td><td>评审排期</td><td>1d</td><td><span class="tag new">新增门</span></td></tr>
+  </tbody></table></div>
+
+  <h2 id="gantt-section" class="page-break">5. W1～W24 甘特图</h2>
+  <p>日期映射不扣除中国法定节假日。红色内框表示关键路径；菱形为放行门/里程碑；灰色斜纹为独立缓冲。左侧依次显示任务、主要前置依赖和参与角色。</p>
+  <div class="legend"><span><i class="swatch trial"></i>试验</span><span><i class="swatch measure"></i>测量</span><span><i class="swatch data"></i>数据</span><span><i class="swatch model"></i>模型</span><span><i class="swatch qt"></i>Qt</span><span><i class="swatch review"></i>评审/门</span><span><i class="swatch buffer"></i>缓冲</span></div>
+  <div class="gantt-wrap"><div class="gantt">
+    <div class="g-head"><div class="g-head-title">任务 / 前置依赖 / 负责人及参与角色</div><div class="weeks">
+      <div class="week">W1<small>08/10</small></div><div class="week">W2<small>08/17</small></div><div class="week">W3<small>08/24</small></div><div class="week">W4<small>08/31</small></div><div class="week">W5<small>09/07</small></div><div class="week">W6<small>09/14</small></div><div class="week">W7<small>09/21</small></div><div class="week">W8<small>09/28</small></div><div class="week">W9<small>10/05</small></div><div class="week">W10<small>10/12</small></div><div class="week">W11<small>10/19</small></div><div class="week">W12<small>10/26</small></div><div class="week">W13<small>11/02</small></div><div class="week">W14<small>11/09</small></div><div class="week">W15<small>11/16</small></div><div class="week">W16<small>11/23</small></div><div class="week">W17<small>11/30</small></div><div class="week">W18<small>12/07</small></div><div class="week">W19<small>12/14</small></div><div class="week">W20<small>12/21</small></div><div class="week">W21<small>12/28</small></div><div class="week">W22<small>01/04</small></div><div class="week">W23<small>01/11</small></div><div class="week">W24<small>01/18</small></div>
+    </div></div>
+    <div class="g-row"><div class="g-label"><b>T0 决策冻结</b><small>范围/基线/DOE sizing/白名单</small><small class="g-role">角色：项目负责人（主责）；工艺、算法、质量</small></div><div class="track"><span class="bar review crit" style="--s:1;--d:1">T0 · 评审</span><span class="milestone" style="--s:1"></span><span class="milestone-label" style="--s:1">G0</span></div></div>
+    <div class="g-row"><div class="g-label"><b>T1 校准/同步/SOP/MSA</b><small class="dep">← T0 范围基线</small><small class="g-role">角色：数据与测量（主责）；工艺、算法、质量</small></div><div class="track"><span class="bar measure crit" style="--s:1;--d:3">设备/测量/同步</span><span class="milestone" style="--s:3"></span><span class="milestone-label" style="--s:3">G1</span></div></div>
+    <div class="g-row"><div class="g-label"><b>1.1.1～1.1.3 校准与同步</b><small class="dep">← 0.1.2</small><small class="g-role">角色：数据与测量（主责）；工艺、算法</small></div><div class="track"><span class="bar measure" style="--s:1;--d:2">校准·坐标·映射</span></div></div>
+    <div class="g-row"><div class="g-label"><b>1.1.4～1.1.5 SOP/MSA</b><small class="dep">← 坐标/设备状态</small><small class="g-role">角色：数据与测量（主责）；工艺、质量</small></div><div class="track"><span class="bar measure" style="--s:2;--d:2">轮廓/金相 SOP·MSA</span></div></div>
+    <div class="g-row"><div class="g-label"><b>设备/校准外部等待</b><small>预约、复校、外协档期</small><small class="g-role">角色：数据与测量（主责）；项目、工艺、外协</small></div><div class="track"><span class="bar buffer" style="--s:1;--d:2">独立等待缓冲</span></div></div>
+    <div class="g-row"><div class="g-label"><b>T2 预试验/正式放行</b><small class="dep">← G0 + G1</small><small class="g-role">角色：焊接工艺/试验（主责）；项目、数据、质量</small></div><div class="track"><span class="bar trial crit" style="--s:3;--d:3">预试验·DOE复核·封存</span><span class="milestone" style="--s:5"></span><span class="milestone-label" style="--s:5">G2</span></div></div>
+    <div class="g-row"><div class="g-label"><b>T3 正式采集</b><small class="dep">← G2；8～12 周</small><small class="g-role">角色：焊接工艺/试验（主责）；数据、质量</small></div><div class="track"><span class="bar trial crit" style="--s:6;--d:9">正式试件/焊中数据</span></div></div>
+    <div class="g-row"><div class="g-label"><b>3.1.2/3.1.4 轮廓测量</b><small class="dep">← 各批次试件/焊接</small><small class="g-role">角色：数据与测量（主责）；工艺、质量</small></div><div class="track"><span class="bar measure" style="--s:6;--d:9">焊前/焊后轮廓</span></div></div>
+    <div class="g-row"><div class="g-label"><b>3.1.5 金相制样/标注</b><small class="dep">← 焊接批次；外协可参与</small><small class="g-role">角色：焊接工艺/试验（主责）；数据、质量、外协</small></div><div class="track"><span class="bar measure crit" style="--s:7;--d:8">N 位置金相滚动完成</span></div></div>
+    <div class="g-row"><div class="g-label"><b>3.1.6 周完整性审计</b><small class="dep">← 四类测量记录</small><small class="g-role">角色：质量/评审（主责）；项目、数据、工艺、算法</small></div><div class="track"><span class="bar review" style="--s:6;--d:10">周报/补采判定</span></div></div>
+    <div class="g-row"><div class="g-label"><b>T4 真实导入/清洗/同步</b><small class="dep">← T1 + T3 增量数据</small><small class="g-role">角色：算法工程师（主责）；数据、工艺、质量</small></div><div class="track"><span class="bar data crit" style="--s:6;--d:10">适配·对齐·manifest·质检</span><span class="milestone" style="--s:15"></span><span class="milestone-label" style="--s:15">G3</span></div></div>
+    <div class="g-row"><div class="g-label"><b>金相/补采独立缓冲</b><small class="dep">← T3/T4 缺口清单</small><small class="g-role">角色：数据与测量（主责）；工艺、质量、外协</small></div><div class="track"><span class="bar buffer" style="--s:15;--d:3">补标/补采/外协缓冲</span></div></div>
+    <div class="g-row"><div class="g-label"><b>T5 双模型训练/评估</b><small class="dep">← 增量开发数据；冻结需 G3</small><small class="g-role">角色：算法工程师（主责）；数据、工艺、质量</small></div><div class="track"><span class="bar model crit" style="--s:12;--d:7">两管线·评估·区间·训练域</span><span class="milestone" style="--s:18"></span><span class="milestone-label" style="--s:18">G4</span></div></div>
+    <div class="g-row"><div class="g-label"><b>5.1.2 主模型</b><small>严格无焊后/金相特征</small><small class="g-role">角色：算法工程师（主责）；数据、质量</small></div><div class="track"><span class="bar model" style="--s:12;--d:4">primary</span></div></div>
+    <div class="g-row"><div class="g-label"><b>5.1.3 可选内部模型</b><small>额外使用已测焊后表面</small><small class="g-role">角色：算法工程师（主责）；数据、Qt、质量</small></div><div class="track"><span class="bar model" style="--s:13;--d:4">optional internal</span></div></div>
+    <div class="g-row"><div class="g-label"><b>模型首版目标窗口</b><small>W14～W18</small><small class="g-role">角色：项目负责人（主责）；算法、数据、质量</small></div><div class="track"><span class="bar review" style="--s:14;--d:5">评估收口 → 冻结</span></div></div>
+    <div class="g-row"><div class="g-label"><b>T6 盲测/两个模型包</b><small class="dep">← G4；一次性解封</small><small class="g-role">角色：质量/评审（主责）；算法、数据、项目</small></div><div class="track"><span class="bar model crit" style="--s:18;--d:2">盲测·打包·复现</span><span class="milestone" style="--s:19"></span><span class="milestone-label" style="--s:19">G5</span></div></div>
+    <div class="g-row"><div class="g-label"><b>T7 Qt 离线推理</b><small class="dep">← G5 模型包契约</small><small class="g-role">角色：Qt 工程师（主责）；算法、质量、项目</small></div><div class="track"><span class="bar qt" style="--s:19;--d:5">加载·展示·黄金样本·部署</span><span class="milestone" style="--s:23"></span><span class="milestone-label" style="--s:23">G6</span></div></div>
+    <div class="g-row"><div class="g-label"><b>T8 总验收/归档</b><small class="dep">← G5 + G6</small><small class="g-role">角色：项目负责人（主责）；全角色、质量/评审</small></div><div class="track"><span class="bar review" style="--s:23;--d:2">复现·范围核对·验收</span><span class="milestone" style="--s:24"></span><span class="milestone-label" style="--s:24">G7</span></div></div>
+  </div></div>
+
+  <h2>6. 资源、依赖与冲突检查</h2>
+  <table><thead><tr><th>关系</th><th>任务</th><th>资源控制</th></tr></thead><tbody>
+    <tr><td>可并行</td><td>T0 后半段↔T1 盘点；T3↔T4；T3 后半段↔T5 管线调通；T6↔Qt 契约准备</td><td>采用版本化输入交接，不要求同一人同时现场操作。</td></tr>
+    <tr><td>部分并行</td><td>T1 同步↔T2 准备；轮廓/过程↔金相；两模型候选评估</td><td>同一角色按工作日分配，不在同日同时承担现场操作和独立签字。</td></tr>
+    <tr><td>严格串行</td><td>G0→G1→G2；G3→G4；G4→盲测；G5→正式 Qt；G6→G7</td><td>失败时只允许返工/诊断，不得越门。</td></tr>
+  </tbody></table>
+  <p><strong>人员冲突结论：</strong>项目负责人在门审窗口投入 0.4～0.6 FTE；工艺角色 W3～W14 
+主导现场；数据角色 W1～W16 主导校准/测量/完整性；算法角色 W1～W18 主导数据与双模型；Qt 角色 W19～W23 
+主投入；质量角色独立签署 G0～G7。基准团队没有同一人在同一时段承担两个必须现场或必须签字的冲突任务。若改为单人全流程，并行假设失效，切换到 
+24～32 周情景。</p>
+  <div class="notice"><strong>工期一致性说明：</strong>T5 在 W12～W15 
+只使用已放行增量数据调通管线，G3 后才形成正式评估、区间和冻结结论。T6 中质量角色执行一次性盲测，算法角色并行生成两个 candidate 
+包，再串行完成坏包/域外测试和发布评审，因此可在 W18～W19 窗口完成；若角色合并或盲测返工，顺延到管理缓冲或外部延期情景。</div>
+
+  <h2>7. 里程碑与放行门</h2>
+  <table><thead><tr><th>门/周次</th><th>放行条件</th><th>未通过时</th></tr></thead><tbody>
+    <tr><td>G0 · W1</td><td>范围、材料/设备基线、DOE sizing、双模型白名单和泄漏规则签署。</td><td>只做准备，不得正式 DOE。</td></tr>
+    <tr><td>G1 · W3</td><td>校准有效、坐标/同步可重建、轮廓和金相 MSA 达标。</td><td>返工 T1，隔离试验数据。</td></tr>
+    <tr><td>G2 · W5</td><td>预试验、安全窗口、N 候选、SOP、人员和盲测清单就绪。</td><td>不得进入正式采集。</td></tr>
+    <tr><td>G3 · W15</td><td>主外键、哈希、同步、窗口、测量质量和分组 manifest 通过。</td><td>补采/补标，不冻结候选。</td></tr>
+    <tr><td>G4 · W18</td><td>两模型独立评估、区间、训练域、特征/预处理和发布规则冻结。</td><td>不得解封盲测。</td></tr>
+    <tr><td>G5 · W19</td><td>一次性盲测、两包完整性/域外/复现通过。</td><td>保持 candidate/未发布。</td></tr>
+    <tr><td>G6 · W23</td><td>Qt 两包加载、黄金样本、坏包/域外拒绝和部署隔离通过。</td><td>返工 Qt，不修改已冻结包。</td></tr>
+    <tr><td>G7 · W24</td><td>端到端复现、归档、发布边界和阶段 2 backlog 清楚。</td><td>形成整改清单，不宣称完成。</td></tr>
+  </tbody></table>
+
+  <h2>8. 风险和缓冲</h2>
+  <table><thead><tr><th>风险</th><th>触发信号</th><th>计划处理</th><th>独立缓冲</th></tr></thead><tbody>
+    <tr><td>金相排队/返工</td><td>位置完整率下降、复核积压</td><td>滚动制样，按批复核，必要时启用外协</td><td>每批 3d；W16～W18</td></tr>
+    <tr><td>设备校准/外协等待</td><td>证书过期、设备/切片机排队</td><td>W1 即锁定预约；未校准数据只作试验</td><td>W1～W2；风险情景 +6～10 周</td></tr>
+    <tr><td>补采</td><td>四类测量、主外键、哈希或窗口不完整</td><td>周审计，生成明确补采清单，禁止默认填补</td><td>W16～W18</td></tr>
+    <tr><td>模型冻结延迟</td><td>区间/训练域/泄漏报告不齐</td><td>W17～W18 管理缓冲；不解封盲测</td><td>2 周管理缓冲</td></tr>
+    <tr><td>Qt 工程晚到</td><td>W19 尚未确认工程路径/目标矩阵</td><td>模型路径照常验收，Qt 尾链顺延</td><td>不挤占模型关键路径</td></tr>
+  </tbody></table>
+
+  <footer class="foot">本计划不执行真实数据采集、代码开发或模型训练，不修改既定模型范围。关联文档：<a href="file:///R:/Users/md20240011/AppData/Local/Microsoft/Windows/INetCache/IE/J3YYW2PL/welding-forming-prediction-implementation-plan.html">首版实施计划</a>、<a href="file:///R:/Users/md20240011/AppData/Local/Microsoft/Windows/INetCache/IE/J3YYW2PL/welding-forming-prediction-model-details.html">模型详细说明</a>。</footer>
+</main>
+
+
+</body></html>
