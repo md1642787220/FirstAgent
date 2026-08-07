@@ -7,7 +7,6 @@ import ChatPage from './pages/ChatPage'
 import DevicePage from './pages/DevicePage'
 import ProductionPage from './pages/ProductionPage'
 import BOMPage from './pages/BOMPage'
-import InventoryPage from './pages/InventoryPage'
 import TracePage from './pages/TracePage'
 import KnowledgePage from './pages/KnowledgePage'
 import TroubleShootPage from './pages/TroubleShootPage'
@@ -87,7 +86,6 @@ export default function App() {
                       <Route path="/devices" element={<DevicePage updateAppState={updateState} />} />
                       <Route path="/production" element={<ProductionPage />} />
                       <Route path="/bom" element={<BOMPage />} />
-                      <Route path="/inventory" element={<InventoryPage />} />
                       <Route path="/trace" element={<TracePage />} />
                       <Route path="/troubleshoot" element={<TroubleShootPage />} />
                       <Route path="/knowledge" element={<KnowledgePage />} />

@@ -42,6 +42,15 @@ export const api = {
     return handleResponse<T>(response)
   },
 
+  async put<T>(url: string, body?: unknown): Promise<T> {
+    const response = await fetch(`${API_BASE}${url}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+    })
+    return handleResponse<T>(response)
+  },
+
   async del<T>(url: string): Promise<T> {
     const response = await fetch(`${API_BASE}${url}`, { method: 'DELETE' })
     return handleResponse<T>(response)
